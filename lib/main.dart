@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'core/time_ttk.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,11 +15,10 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   bool isPressed = false;
-  Stopwatch stopwatch = Stopwatch();
   Timer? timer;
-  int lastTime = 0;
+  TimeTTK timeTTK = TimeTTK();
 
-  @override  
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
@@ -40,34 +40,35 @@ class _MainAppState extends State<MainApp> {
   }
 
   Container _timeText() {
-    String textField = '-'; 
+    String textField = '-';
     if (isPressed == true) {
-      int time = stopwatch.elapsedMilliseconds; 
-      textField = time.toString();
+      textField = timeTTK.formatElapsedToText(null);
     }
     return Container(
-      child: _commonText(textField, 30)
-    );
+      width: 250,
+      //padding: isPressed ? const EdgeInsets.only(left: 58) : null,
+      alignment: /*isPressed ? null :*/ Alignment.center,
+      child: _commonText(textField, 30),
+      );
   }
 
   TextButton _startButton() {
-  return TextButton(
+    return TextButton(
       onPressed: () {
-        setState((){
-          if (isPressed == false) {
-            stopwatch.start();
-            timer = Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
-            setState(() {}); 
-            });
-          }
-          else {
-            stopwatch.stop();
-            lastTime = stopwatch.elapsedMilliseconds;
-            stopwatch.reset();
-            timer?.cancel();
-          }
+        setState(
+          () {
+            if (isPressed == false) {
+              timeTTK.start();
+              timer =
+                  Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
+                setState(() {});
+              });
+            } else {
+              timeTTK.stop();
+              timer?.cancel();
+            }
 
-          isPressed = !isPressed; 
+            isPressed = !isPressed;
           },
         );
       },
@@ -75,26 +76,23 @@ class _MainAppState extends State<MainApp> {
         backgroundColor: Colors.red,
         minimumSize: const Size(150, 50),
       ),
-      child: isPressed ? _commonText('Finish', 20) : _commonText('Start', 20) ,
+      child: isPressed ? _commonText('Finish', 20) : _commonText('Start', 20),
     );
   }
 
   Container _lastData() {
-    String textField = 'Last Measured Time: ' + lastTime.toString(); 
+    String textField = 'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
 
-    return Container(
-      child: _commonText(textField, 20)
-    );
+    return Container(child: _commonText(textField, 20));
   }
 
   Text _commonText(String text, double fontSize) {
-  return Text(
-    text,
-    style: TextStyle(
-      color: Colors.white,
-      fontSize: fontSize,
-    ),
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: fontSize,
+      ),
     );
   }
-
 }
