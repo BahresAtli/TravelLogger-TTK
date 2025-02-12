@@ -1,14 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'core/time_ttk.dart';
+import 'core/location_ttk.dart';
+//import 'package:geolocator/geolocator.dart';
 
+LocationTTK locationTTK = LocationTTK();
+
+Future<bool> setLocationPermission() async {
+  return locationTTK.locationPermission();
+}
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  setLocationPermission();
   runApp(const MainApp());
 }
 
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
-
   @override
   State<MainApp> createState() => _MainAppState();
 }
@@ -17,6 +25,20 @@ class _MainAppState extends State<MainApp> {
   bool isPressed = false;
   Timer? timer;
   TimeTTK timeTTK = TimeTTK();
+
+
+  void _pressHandler() async {
+    timeTTK.start();
+    locationTTK.getPosition();
+    timer = Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
+      setState(() {});
+    });
+  }
+
+  void _finishHandler() {
+    timeTTK.stop();
+    timer?.cancel();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +54,8 @@ class _MainAppState extends State<MainApp> {
               _startButton(),
               const SizedBox(height: 10),
               _lastData(),
+              const SizedBox(height: 10),
+              _currentLocation(),
             ],
           ),
         ),
@@ -58,16 +82,10 @@ class _MainAppState extends State<MainApp> {
         setState(
           () {
             if (isPressed == false) {
-              timeTTK.start();
-              timer =
-                  Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
-                setState(() {});
-              });
+              _pressHandler();
             } else {
-              timeTTK.stop();
-              timer?.cancel();
+              _finishHandler();
             }
-
             isPressed = !isPressed;
           },
         );
@@ -82,6 +100,12 @@ class _MainAppState extends State<MainApp> {
 
   Container _lastData() {
     String textField = 'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
+
+    return Container(child: _commonText(textField, 20));
+  }
+
+  Container _currentLocation() {
+    String textField = 'Current Location Is: ${locationTTK.currentPosition.toString()}';
 
     return Container(child: _commonText(textField, 20));
   }
