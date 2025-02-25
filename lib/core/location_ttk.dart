@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 
 class LocationTTK {
   LocationPermission? permission;
@@ -52,7 +53,15 @@ class LocationTTK {
     return Future.error('location denied');
   }
 
-  String convertPositionToString () {
-    return currentPosition.toString();
+  void changeLocation() async {
+    Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      getPosition();
+    });
   }
+
+  String convertPositionToString() {
+    
+    return '${currentPosition?.latitude.toString()} ${currentPosition?.longitude.toString()}';
+  }
+
 }

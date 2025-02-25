@@ -9,6 +9,7 @@ LocationTTK locationTTK = LocationTTK();
 Future<bool> setLocationPermission() async {
   return locationTTK.locationPermission();
 }
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setLocationPermission();
@@ -23,14 +24,15 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   bool isPressed = false;
+
   Timer? timer;
   TimeTTK timeTTK = TimeTTK();
 
 
   void _pressHandler() async {
     timeTTK.start();
-    locationTTK.getPosition();
-    timer = Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
+    locationTTK.changeLocation();
+    Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
       setState(() {});
     });
   }
@@ -65,7 +67,7 @@ class _MainAppState extends State<MainApp> {
 
   Container _timeText() {
     String textField = '-';
-    if (isPressed == true) {
+    if (isPressed) {
       textField = timeTTK.formatElapsedToText(null);
     }
     return Container(
@@ -105,7 +107,11 @@ class _MainAppState extends State<MainApp> {
   }
 
   Container _currentLocation() {
-    String textField = 'Current Location Is: ${locationTTK.currentPosition.toString()}';
+    String textField = 'Press Start to see location!';
+
+    if (isPressed) {
+      textField = locationTTK.convertPositionToString();
+    }
 
     return Container(child: _commonText(textField, 20));
   }
