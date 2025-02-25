@@ -2,16 +2,42 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'core/time_ttk.dart';
 import 'core/location_ttk.dart';
+//import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+//import 'database/db_helper.dart';
 //import 'package:geolocator/geolocator.dart';
 
 LocationTTK locationTTK = LocationTTK();
 
+/*Future<void> getDatabase() async {
+  DatabaseHelper db = DatabaseHelper.instance;
+  for (int i = 5; i < 15; i++) {
+    Map<String, dynamic> dersRow = {
+      'recordID': i,
+      "startTime": '01-01-2025 12:00:00',
+      "endTime": '01-01-2025 13:00:00',
+      "elapsedMilisecs": 3600000,
+    };
+    await db.insert(dersRow, "mainTable");
+  }
+
+  Map<String, dynamic> dersRow = {
+    'recordID': 0,
+    "startTime": '01-01-2025 12:00:00',
+    "endTime": '01-01-2025 13:00:00',
+    "elapsedMilisecs": 3600000,
+  };
+  await db.insert(dersRow, "mainTable");
+}*/
+
 Future<bool> setLocationPermission() async {
   return locationTTK.locationPermission();
 }
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  //FlutterForegroundTask.initCommunicationPort();
   setLocationPermission();
+  //getDatabase();
   runApp(const MainApp());
 }
 
@@ -26,12 +52,22 @@ class _MainAppState extends State<MainApp> {
   Timer? timer;
   TimeTTK timeTTK = TimeTTK();
 
+  int? recordID;
+  String? startTime;
+  String? endTime;
+  int? elapsedMilisecs;
+  String? startLatitude;
+  String? startLongitude;
+  String? endLatitude;
+  String? endLongitude;
 
   void _pressHandler() async {
     timeTTK.start();
-    locationTTK.getPosition();
-    timer = Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
+    timer = Timer.periodic(const Duration(milliseconds: 10), (Timer t) {
       setState(() {});
+    });
+    Timer.periodic(const Duration (seconds: 1), (Timer t) {
+      locationTTK.getPosition();
     });
   }
 
@@ -73,7 +109,7 @@ class _MainAppState extends State<MainApp> {
       //padding: isPressed ? const EdgeInsets.only(left: 58) : null,
       alignment: /*isPressed ? null :*/ Alignment.center,
       child: _commonText(textField, 30),
-      );
+    );
   }
 
   TextButton _startButton() {
@@ -99,13 +135,15 @@ class _MainAppState extends State<MainApp> {
   }
 
   Container _lastData() {
-    String textField = 'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
+    String textField =
+        'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
 
     return Container(child: _commonText(textField, 20));
   }
 
   Container _currentLocation() {
-    String textField = 'Current Location Is: ${locationTTK.currentPosition.toString()}';
+    String textField =
+        locationTTK.convertPositionToString();
 
     return Container(child: _commonText(textField, 20));
   }

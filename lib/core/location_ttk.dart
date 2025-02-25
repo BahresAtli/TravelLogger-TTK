@@ -52,7 +52,9 @@ class LocationTTK {
     return Future.error('location denied');
   }
 
-  String convertPositionToString () {
-    return currentPosition.toString();
+  String convertPositionToString() {
+    String? latitude = currentPosition?.latitude.toString();
+    String? longitude = currentPosition?.longitude.toString();
+    return '$latitude $longitude';
   }
 }
