@@ -5,6 +5,7 @@ import 'core/location_ttk.dart';
 import 'database/db_helper.dart';
 import 'database/main_table.dart';
 import 'database/location_table.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 //TODO: App cannot get location data when it runs in background
 
@@ -71,6 +72,7 @@ class _MainAppState extends State<MainApp> {
     mainData.recordID = 0;
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
+    WakelockPlus.enable(); //don't turn off the screen, temporary solution for background issue
 
     //TODO: Interface waits initial location data to update the screen with elapsed time. Fix.
     await locationTTK.getPosition();
@@ -103,6 +105,7 @@ class _MainAppState extends State<MainApp> {
     mainData.endTime = DateTime.now().toString();
     timeTTK.stop();
     timer?.cancel();
+    WakelockPlus.disable();
     mainData.elapsedMilisecs = timeTTK.lastTime;
     mainData.endLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();

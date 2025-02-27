@@ -26,7 +26,6 @@ class TimeTTK {
     String padding(int n) => n.toString().padLeft(2, "0");
     //String padMsec(int n) => n.toString().padLeft(3, "0");
 
-    //TODO: Make this structure flexible (show milisecs if the user wants for example)
 
     String hours = padding(currentTime.inHours.remainder(24).abs());
     String minutes = padding(currentTime.inMinutes.remainder(60).abs());
