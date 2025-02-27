@@ -2,9 +2,36 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'core/time_ttk.dart';
 import 'core/location_ttk.dart';
-//import 'package:geolocator/geolocator.dart';
+import 'database/db_helper.dart';
+import 'database/main_table.dart';
+import 'database/location_table.dart';
+
+//TODO: App cannot get location data when it runs in background
+
+MainTable mainData = MainTable();
+LocationTable locationData  = LocationTable();
 
 LocationTTK locationTTK = LocationTTK();
+
+DatabaseHelper dbHelper = DatabaseHelper.instance;
+
+Map<String, dynamic>? initialItem;
+
+Future<void> initialInsert() async {
+  var list = await dbHelper.select('mainTable');
+  if (list.isEmpty) {
+    locationData.recordID = 1;
+    for (int i = 0; i < 1; i++) {
+      Map<String, dynamic> row = {
+        'recordID': i,
+        "startTime": '01-01-2025 12:00:00',
+        "endTime": '01-01-2025 13:00:00',
+        "elapsedMilisecs": 3600000,
+      };
+      await dbHelper.insert(row, "mainTable");
+    }
+  }
+}
 
 Future<bool> setLocationPermission() async {
   return locationTTK.locationPermission();
@@ -13,6 +40,7 @@ Future<bool> setLocationPermission() async {
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setLocationPermission();
+  initialInsert();
   runApp(const MainApp());
 }
 
@@ -30,16 +58,64 @@ class _MainAppState extends State<MainApp> {
 
 
   void _pressHandler() async {
+    // Note that I defined 0th index as test index
+    var list = await dbHelper.select('mainTable');
+    initialItem = list.first;
+    if (initialItem?['recordID'] == 0) {
+      dbHelper.delete(0, "mainTable");
+    }
+    locationData.recordID = list.last['recordID'] + 1;
+    
+
     timeTTK.start();
+    mainData.recordID = 0;
+    locationData.locationOrder = 0;
+    mainData.startTime = DateTime.now().toString();
+
+    //TODO: Interface waits initial location data to update the screen with elapsed time. Fix.
+    await locationTTK.getPosition();
+    mainData.startLatitude = locationTTK.currentPosition?.latitude.toString();
+    mainData.startLongitude = locationTTK.currentPosition?.longitude.toString();
+
     locationTTK.changeLocation();
-    Timer.periodic(const Duration(milliseconds: 1), (Timer t) {
+    
+    Timer.periodic(const Duration(seconds: 1), (Timer t) {
       setState(() {});
+    });
+    timer = Timer.periodic(const Duration(seconds:10), (Timer t) async {
+      
+      locationData.locationOrder++;
+      locationData.latitude = locationTTK.currentPosition?.latitude.toString();
+      locationData.longitude = locationTTK.currentPosition?.longitude.toString();
+      locationData.timeAtInstance = DateTime.now().toString();
+      Map<String, dynamic> row = {
+          'recordID': locationData.recordID,
+          'locationOrder': locationData.locationOrder,
+          'latitude': locationData.latitude,
+          'longitude': locationData.longitude,
+          'timeAtInstance': locationData.timeAtInstance
+      };
+      await dbHelper.insert(row, 'location');
     });
   }
 
-  void _finishHandler() {
+  void _finishHandler() async {
+    mainData.endTime = DateTime.now().toString();
     timeTTK.stop();
     timer?.cancel();
+    mainData.elapsedMilisecs = timeTTK.lastTime;
+    mainData.endLatitude = locationTTK.currentPosition?.latitude.toString();
+    mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();
+    Map<String, dynamic> row = {
+        'startTime': mainData.startTime,
+        'endTime': mainData.endTime,
+        'elapsedMilisecs': mainData.elapsedMilisecs,
+        'startLatitude': mainData.startLatitude,
+        'startLongitude': mainData.startLongitude,
+        'endLatitude': mainData.endLatitude,
+        'endLongitude': mainData.endLongitude
+      };
+    await dbHelper.insert(row, 'mainTable');
   }
 
   @override
