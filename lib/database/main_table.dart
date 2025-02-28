@@ -8,6 +8,7 @@ class MainTable {
   late String? startLongitude;
   late String? endLatitude;
   late String? endLongitude;
+  late String? label;
 
   MainTable();
 

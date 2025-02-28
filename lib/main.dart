@@ -19,6 +19,7 @@ DatabaseHelper dbHelper = DatabaseHelper.instance;
 Map<String, dynamic>? initialItem;
 
 Future<void> initialInsert() async {
+  dbHelper.addColumn('label', 'mainTable'); //label column is added (note that it is a temp solution, will be more structured later on)
   var list = await dbHelper.select('mainTable');
   if (list.isEmpty) {
     locationData.recordID = 1;
@@ -42,7 +43,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setLocationPermission();
   initialInsert();
-  runApp(const MainApp());
+  runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
 }
 
 class MainApp extends StatefulWidget {
@@ -56,6 +57,7 @@ class _MainAppState extends State<MainApp> {
 
   Timer? timer;
   TimeTTK timeTTK = TimeTTK();
+  late TextEditingController controller = TextEditingController();
 
 
   void _pressHandler() async {
@@ -74,16 +76,16 @@ class _MainAppState extends State<MainApp> {
     mainData.startTime = DateTime.now().toString();
     WakelockPlus.enable(); //don't turn off the screen, temporary solution for background issue
 
+    Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      setState(() {});
+    });
+
     //TODO: Interface waits initial location data to update the screen with elapsed time. Fix.
     await locationTTK.getPosition();
     mainData.startLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.startLongitude = locationTTK.currentPosition?.longitude.toString();
 
     locationTTK.changeLocation();
-    
-    Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      setState(() {});
-    });
     timer = Timer.periodic(const Duration(seconds:10), (Timer t) async {
       
       locationData.locationOrder++;
@@ -109,6 +111,7 @@ class _MainAppState extends State<MainApp> {
     mainData.elapsedMilisecs = timeTTK.lastTime;
     mainData.endLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();
+    mainData.label = await _labelInputBox();
     Map<String, dynamic> row = {
         'startTime': mainData.startTime,
         'endTime': mainData.endTime,
@@ -116,7 +119,8 @@ class _MainAppState extends State<MainApp> {
         'startLatitude': mainData.startLatitude,
         'startLongitude': mainData.startLongitude,
         'endLatitude': mainData.endLatitude,
-        'endLongitude': mainData.endLongitude
+        'endLongitude': mainData.endLongitude,
+        'label': mainData.label
       };
     await dbHelper.insert(row, 'mainTable');
   }
@@ -143,6 +147,40 @@ class _MainAppState extends State<MainApp> {
       ),
     );
   }
+  Future<String?> _labelInputBox() => showDialog<String>(
+        //does not work at the moment
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 67, 66, 66),
+          title: _commonText('Label the measurement', 20),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Enter the label',
+              hintStyle: TextStyle(
+                color: Colors.grey,
+              ),
+            ),
+            style: const TextStyle(
+              color: Colors.white,
+            ),
+            controller: controller,
+          ),
+          actions: [
+            TextButton(
+                child: const Text(
+                  'Done!',
+                  style: TextStyle(
+                    color: Colors.red,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(controller.text);
+                },
+            ),
+          ],
+        ),
+      );
 
   Container _timeText() {
     String textField = '-';
@@ -165,7 +203,7 @@ class _MainAppState extends State<MainApp> {
             if (isPressed == false) {
               _pressHandler();
             } else {
-              _finishHandler();
+              _finishHandler(); 
             }
             isPressed = !isPressed;
           },
