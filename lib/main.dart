@@ -41,6 +41,7 @@ Future<bool> setLocationPermission() async {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  //FlutterForegroundTask.initCommunicationPort();
   setLocationPermission();
   initialInsert();
   runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
@@ -68,10 +69,9 @@ class _MainAppState extends State<MainApp> {
       dbHelper.delete(0, "mainTable");
     }
     locationData.recordID = list.last['recordID'] + 1;
-    
+    mainData.recordID = list.last['recordID'] + 1;
 
     timeTTK.start();
-    mainData.recordID = 0;
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
     WakelockPlus.enable(); //don't turn off the screen, temporary solution for background issue
@@ -80,10 +80,17 @@ class _MainAppState extends State<MainApp> {
       setState(() {});
     });
 
-    //TODO: Interface waits initial location data to update the screen with elapsed time. Fix.
     await locationTTK.getPosition();
     mainData.startLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.startLongitude = locationTTK.currentPosition?.longitude.toString();
+    mainData.label = "Error: App crashed/Connection lost while measuring";
+    Map<String, dynamic> mainRow = { //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
+        'startTime': mainData.startTime,
+        'startLatitude': mainData.startLatitude,
+        'startLongitude': mainData.startLongitude,
+        'label': mainData.label,
+    };
+    await dbHelper.insert(mainRow, 'mainTable');
 
     locationTTK.changeLocation();
     timer = Timer.periodic(const Duration(seconds:10), (Timer t) async {
@@ -92,14 +99,14 @@ class _MainAppState extends State<MainApp> {
       locationData.latitude = locationTTK.currentPosition?.latitude.toString();
       locationData.longitude = locationTTK.currentPosition?.longitude.toString();
       locationData.timeAtInstance = DateTime.now().toString();
-      Map<String, dynamic> row = {
+      Map<String, dynamic> locationRow = {
           'recordID': locationData.recordID,
           'locationOrder': locationData.locationOrder,
           'latitude': locationData.latitude,
           'longitude': locationData.longitude,
           'timeAtInstance': locationData.timeAtInstance
       };
-      await dbHelper.insert(row, 'location');
+      await dbHelper.insert(locationRow, 'location');
     });
   }
 
@@ -113,6 +120,7 @@ class _MainAppState extends State<MainApp> {
     mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();
     mainData.label = await _labelInputBox();
     Map<String, dynamic> row = {
+        'recordID': mainData.recordID,
         'startTime': mainData.startTime,
         'endTime': mainData.endTime,
         'elapsedMilisecs': mainData.elapsedMilisecs,
@@ -122,7 +130,7 @@ class _MainAppState extends State<MainApp> {
         'endLongitude': mainData.endLongitude,
         'label': mainData.label
       };
-    await dbHelper.insert(row, 'mainTable');
+    await dbHelper.update(row, 'mainTable');
   }
 
   @override
