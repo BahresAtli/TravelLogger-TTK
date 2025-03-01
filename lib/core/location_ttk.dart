@@ -51,11 +51,12 @@ class LocationTTK {
     currentPosition = null;
     return Future.error('location denied');
   }
-
-  void changeLocation() async {
-    Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      getPosition();
+  //not really used currently
+  void changeLocation(bool run) async {
+    Timer.periodic(const Duration(seconds: 1), (Timer t) async {
+      await getPosition();
     });
+
   }
 
   String convertPositionToString() {

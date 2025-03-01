@@ -59,6 +59,7 @@ class _MainAppState extends State<MainApp> {
 
   Timer? timerLocation;
   Timer? timerState;
+  Timer? timerDatabase;
   TimeTTK timeTTK = TimeTTK();
   late TextEditingController controller = TextEditingController();
 
@@ -78,9 +79,11 @@ class _MainAppState extends State<MainApp> {
     WakelockPlus
         .enable(); //don't turn off the screen, temporary solution for background issue
 
-    Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      locationTTK.getPosition();
+    timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState(() {});
+    });
+    timerLocation = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
+      await locationTTK.getPosition();
     });
 
     await locationTTK.getPosition();
@@ -96,7 +99,7 @@ class _MainAppState extends State<MainApp> {
     };
     await dbHelper.insert(mainRow, 'mainTable');
 
-    timerLocation =
+    timerDatabase =
         Timer.periodic(const Duration(seconds: 10), (Timer t) async {
       locationData.locationOrder++;
       locationData.latitude = locationTTK.currentPosition?.latitude.toString();
@@ -117,6 +120,7 @@ class _MainAppState extends State<MainApp> {
   void _finishHandler() async {
     mainData.endTime = DateTime.now().toString();
     timeTTK.stop();
+    timerDatabase?.cancel();
     timerLocation?.cancel();
     timerState?.cancel();
     WakelockPlus.disable();
