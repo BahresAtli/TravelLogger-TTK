@@ -10,7 +10,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 //TODO: App cannot get location data when it runs in background
 
 MainTable mainData = MainTable();
-LocationTable locationData  = LocationTable();
+LocationTable locationData = LocationTable();
 
 LocationTTK locationTTK = LocationTTK();
 
@@ -19,7 +19,8 @@ DatabaseHelper dbHelper = DatabaseHelper.instance;
 Map<String, dynamic>? initialItem;
 
 Future<void> initialInsert() async {
-  dbHelper.addColumn('label', 'mainTable'); //label column is added (note that it is a temp solution, will be more structured later on)
+  dbHelper.addColumn('label',
+      'mainTable'); //label column is added (note that it is a temp solution, will be more structured later on)
   var list = await dbHelper.select('mainTable');
   if (list.isEmpty) {
     locationData.recordID = 1;
@@ -56,10 +57,10 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   bool isPressed = false;
 
-  Timer? timer;
+  Timer? timerLocation;
+  Timer? timerState;
   TimeTTK timeTTK = TimeTTK();
   late TextEditingController controller = TextEditingController();
-
 
   void _pressHandler() async {
     // Note that I defined 0th index as test index
@@ -74,9 +75,11 @@ class _MainAppState extends State<MainApp> {
     timeTTK.start();
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
-    WakelockPlus.enable(); //don't turn off the screen, temporary solution for background issue
+    WakelockPlus
+        .enable(); //don't turn off the screen, temporary solution for background issue
 
     Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      locationTTK.getPosition();
       setState(() {});
     });
 
@@ -84,27 +87,28 @@ class _MainAppState extends State<MainApp> {
     mainData.startLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.startLongitude = locationTTK.currentPosition?.longitude.toString();
     mainData.label = "Error: App crashed/Connection lost while measuring";
-    Map<String, dynamic> mainRow = { //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
-        'startTime': mainData.startTime,
-        'startLatitude': mainData.startLatitude,
-        'startLongitude': mainData.startLongitude,
-        'label': mainData.label,
+    Map<String, dynamic> mainRow = {
+      //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
+      'startTime': mainData.startTime,
+      'startLatitude': mainData.startLatitude,
+      'startLongitude': mainData.startLongitude,
+      'label': mainData.label,
     };
     await dbHelper.insert(mainRow, 'mainTable');
 
-    locationTTK.changeLocation();
-    timer = Timer.periodic(const Duration(seconds:10), (Timer t) async {
-      
+    timerLocation =
+        Timer.periodic(const Duration(seconds: 10), (Timer t) async {
       locationData.locationOrder++;
       locationData.latitude = locationTTK.currentPosition?.latitude.toString();
-      locationData.longitude = locationTTK.currentPosition?.longitude.toString();
+      locationData.longitude =
+          locationTTK.currentPosition?.longitude.toString();
       locationData.timeAtInstance = DateTime.now().toString();
       Map<String, dynamic> locationRow = {
-          'recordID': locationData.recordID,
-          'locationOrder': locationData.locationOrder,
-          'latitude': locationData.latitude,
-          'longitude': locationData.longitude,
-          'timeAtInstance': locationData.timeAtInstance
+        'recordID': locationData.recordID,
+        'locationOrder': locationData.locationOrder,
+        'latitude': locationData.latitude,
+        'longitude': locationData.longitude,
+        'timeAtInstance': locationData.timeAtInstance
       };
       await dbHelper.insert(locationRow, 'location');
     });
@@ -113,23 +117,30 @@ class _MainAppState extends State<MainApp> {
   void _finishHandler() async {
     mainData.endTime = DateTime.now().toString();
     timeTTK.stop();
-    timer?.cancel();
+    timerLocation?.cancel();
+    timerState?.cancel();
     WakelockPlus.disable();
+    //this is for the new session settings, new session overwrites these values and cause to program to update the old row with new session variables.
+    int? recordID = mainData.recordID;
+    String? startTime = mainData.startTime;
+    String? startLatitude = mainData.startLatitude;
+    String? startLongitude = mainData.startLongitude; 
+
     mainData.elapsedMilisecs = timeTTK.lastTime;
     mainData.endLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();
     mainData.label = await _labelInputBox();
     Map<String, dynamic> row = {
-        'recordID': mainData.recordID,
-        'startTime': mainData.startTime,
-        'endTime': mainData.endTime,
-        'elapsedMilisecs': mainData.elapsedMilisecs,
-        'startLatitude': mainData.startLatitude,
-        'startLongitude': mainData.startLongitude,
-        'endLatitude': mainData.endLatitude,
-        'endLongitude': mainData.endLongitude,
-        'label': mainData.label
-      };
+      'recordID': recordID,
+      'startTime': startTime,
+      'endTime': mainData.endTime,
+      'elapsedMilisecs': mainData.elapsedMilisecs,
+      'startLatitude': startLatitude,
+      'startLongitude': startLongitude,
+      'endLatitude': mainData.endLatitude,
+      'endLongitude': mainData.endLongitude,
+      'label': mainData.label
+    };
     await dbHelper.update(row, 'mainTable');
   }
 
@@ -155,6 +166,7 @@ class _MainAppState extends State<MainApp> {
       ),
     );
   }
+
   Future<String?> _labelInputBox() => showDialog<String>(
         //does not work at the moment
         context: context,
@@ -176,15 +188,30 @@ class _MainAppState extends State<MainApp> {
           ),
           actions: [
             TextButton(
-                child: const Text(
-                  'Done!',
-                  style: TextStyle(
-                    color: Colors.red,
-                  ),
+              child: const Text(
+                'New session',
+                style: TextStyle(
+                  color: Colors.red,
                 ),
-                onPressed: () {
-                  Navigator.of(context).pop(controller.text);
-                },
+              ),
+              onPressed: () {
+                if (isPressed == false) {
+                  _pressHandler();
+                  isPressed = !isPressed;
+                }
+              },
+            ),
+            TextButton(
+              child: const Text(
+                'Done!',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(controller.text);
+                controller.clear();
+              },
             ),
           ],
         ),
@@ -200,7 +227,7 @@ class _MainAppState extends State<MainApp> {
       //padding: isPressed ? const EdgeInsets.only(left: 58) : null,
       alignment: /*isPressed ? null :*/ Alignment.center,
       child: _commonText(textField, 30),
-      );
+    );
   }
 
   TextButton _startButton() {
@@ -211,7 +238,7 @@ class _MainAppState extends State<MainApp> {
             if (isPressed == false) {
               _pressHandler();
             } else {
-              _finishHandler(); 
+              _finishHandler();
             }
             isPressed = !isPressed;
           },
@@ -226,7 +253,8 @@ class _MainAppState extends State<MainApp> {
   }
 
   Container _lastData() {
-    String textField = 'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
+    String textField =
+        'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
 
     return Container(child: _commonText(textField, 20));
   }

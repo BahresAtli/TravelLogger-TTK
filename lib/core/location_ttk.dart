@@ -7,7 +7,6 @@ class LocationTTK {
 
   Future<bool> locationPermission() async {
     bool serviceEnabled;
-    //TODO: Implement denied location properly
 
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
