@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'core/time_ttk.dart';
 import 'core/location_ttk.dart';
@@ -6,8 +7,15 @@ import 'database/db_helper.dart';
 import 'database/main_table.dart';
 import 'database/location_table.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+//import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 
 //TODO: App cannot get location data when it runs in background
+
+final FlutterBackgroundService service = FlutterBackgroundService();
+bool isRunning = false;
 
 MainTable mainData = MainTable();
 LocationTable locationData = LocationTable();
@@ -36,15 +44,28 @@ Future<void> initialInsert() async {
   }
 }
 
-Future<bool> setLocationPermission() async {
-  return locationTTK.locationPermission();
+Future<void> setPermissions() async {
+  notificationPermission();
+  locationTTK.locationPermission();
+}
+//location permission handler is copy pasted
+Future<bool> notificationPermission() async {
+  var status = await Permission.notification.status;
+
+  if (status.isDenied) {
+    return false;
+  }
+
+  // When we reach here, permissions are granted and we can
+  // continue accessing the position of the device.
+  return true;
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //FlutterForegroundTask.initCommunicationPort();
-  setLocationPermission();
+  setPermissions();
   initialInsert();
+  await initializeService();
   runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
 }
 
@@ -52,6 +73,36 @@ class MainApp extends StatefulWidget {
   const MainApp({super.key});
   @override
   State<MainApp> createState() => _MainAppState();
+}
+
+Future<void> initializeService() async {
+  final service = FlutterBackgroundService();
+
+  await service.configure(
+    iosConfiguration: IosConfiguration(),
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      isForegroundMode: true,
+    ),
+  );
+}
+
+void onStart(ServiceInstance service) async {
+
+  Timer.periodic(const Duration(seconds: 10), (timer) async {
+    if (service is AndroidServiceInstance) {
+      if(!(await FlutterBackgroundService().isRunning())) {
+        timer.cancel();
+        return;
+      }
+      locationTTK.getPosition();
+      print('Location taken!');
+      service.setForegroundNotificationInfo(
+        title: 'ttkApp Service',
+        content: 'Current Location: ${locationTTK.currentPosition}',
+      );
+    }
+  });
 }
 
 class _MainAppState extends State<MainApp> {
@@ -73,6 +124,7 @@ class _MainAppState extends State<MainApp> {
     locationData.recordID = list.last['recordID'] + 1;
     mainData.recordID = list.last['recordID'] + 1;
 
+    await service.startService();
     timeTTK.start();
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
@@ -124,6 +176,7 @@ class _MainAppState extends State<MainApp> {
     timerLocation?.cancel();
     timerState?.cancel();
     WakelockPlus.disable();
+    service.invoke('stopService');
     //this is for the new session settings, new session overwrites these values and cause to program to update the old row with new session variables.
     int? recordID = mainData.recordID;
     String? startTime = mainData.startTime;
