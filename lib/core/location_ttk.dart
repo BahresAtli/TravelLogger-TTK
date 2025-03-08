@@ -2,8 +2,12 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 
 class LocationTTK {
+
+
+
   LocationPermission? permission;
   Position? currentPosition;
+  StreamSubscription? subscription;
 
   Future<bool> locationPermission() async {
     bool serviceEnabled;
@@ -40,6 +44,20 @@ class LocationTTK {
     return true;
   }
 
+  void startListeningLocation() {
+    subscription = Geolocator.getPositionStream(
+      locationSettings: AndroidSettings(
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'ttkApp', 
+          notificationText: 'ttkapp is getting the Location',
+          enableWakeLock: true,
+          )
+      )
+    ).listen((event) async {
+      currentPosition = event;
+      print(currentPosition.toString());
+    });
+  }
 
 
   Future<Position> getPosition() async {
