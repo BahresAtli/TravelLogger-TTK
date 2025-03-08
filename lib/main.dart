@@ -74,6 +74,7 @@ class _MainAppState extends State<MainApp> {
     mainData.recordID = list.last['recordID'] + 1;
 
     timeTTK.start();
+    locationTTK.startListeningLocation();
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
     WakelockPlus
@@ -81,9 +82,6 @@ class _MainAppState extends State<MainApp> {
 
     timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState(() {});
-    });
-    timerLocation = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
-      await locationTTK.getPosition();
     });
 
     await locationTTK.getPosition();
