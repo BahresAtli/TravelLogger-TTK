@@ -149,6 +149,8 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: "TTK App",
       home: Scaffold(
         backgroundColor: Colors.black,
         body: Center(
