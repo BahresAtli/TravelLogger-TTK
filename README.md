@@ -13,14 +13,18 @@ TTK App aims to save your time and location stream data into your phone for foll
 ## What TTK 0.0.0 can do:
 
 Save the elapsed time for a travel
+
 Save your location every 10 seconds into local database
 
 
 ## Known bugs
 
 You need to always enable the location permission. If you disable the location permission, the app will crash.
+
 App searches for the location data, even after you press "Finish" (even though it does not save the location data after pressing finish)
+
 Setting a label for the measurement can be pretty rough experience. It is not smooth.
+
 You cannot access the database without getting help from external application and root permission on your phone.
 
 ## What's next?
@@ -28,8 +32,14 @@ You cannot access the database without getting help from external application an
 Since it is the first release, there is so much missing from the app for it to be truly an useful Travel Logger app. Here is some features I'm planning to add in the future:
 
 Distance data
+
 Speedometer
+
 Better location map
+
 Better labeling
+
 Classifying the type of vehicles (walking, cycling, car, public transport...)
+
 Ability to save your vehicle info such as plate, bus number (for public transit systems) etc.
+
