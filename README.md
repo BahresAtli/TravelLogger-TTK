@@ -1,5 +1,7 @@
 # TTK 0.0.0
 
+Download here! https://github.com/BahresAtli/TravelLogger-TTK/releases/download/TTK_0.0.0/TTK_0.0.0.apk
+
 ## Important note
 
 This version is for the first ever release and not a complete project. There might be many bugs other than listed, do not entirely trust this app for saving your travel data, at least for now. Though if you want to test, you are more than welcome!
