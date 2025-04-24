@@ -55,7 +55,6 @@ class LocationTTK {
       )
     ).listen((event) async {
       currentPosition = event;
-      print(currentPosition.toString());
     });
   }
 

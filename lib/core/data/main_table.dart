@@ -1,5 +1,7 @@
 
-class MainTable {
+import 'package:ttkapp/core/data/object_base.dart';
+
+class MainTable extends ObjectBase {
   late int? recordID;
   late String? startTime;
   late String? endTime;
@@ -12,6 +14,4 @@ class MainTable {
 
   MainTable();
 
-
-  bool? get stringify => true;
 }

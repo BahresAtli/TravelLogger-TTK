@@ -24,13 +24,12 @@ class TimeTTK {
     Duration currentTime = getElapsedAsDuration(milliseconds);
 
     String padding(int n) => n.toString().padLeft(2, "0");
-    //String padMsec(int n) => n.toString().padLeft(3, "0");
 
 
     String hours = padding(currentTime.inHours.remainder(24).abs());
     String minutes = padding(currentTime.inMinutes.remainder(60).abs());
     String seconds = padding(currentTime.inSeconds.remainder(60).abs());
-    //String milliSeconds = padMsec(currentTime.inMilliseconds.remainder(1000).abs());
+    
     return "$hours:$minutes:$seconds";
 
   }

@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> createTables(Database db, int version) async {
+
+
   await db.execute('''
           PRAGMA foreign_keys = ON;
           ''');
@@ -14,7 +17,8 @@ Future<void> createTables(Database db, int version) async {
             startLatitude TEXT,
             startLongitude TEXT,
             endLatitude TEXT,
-            endLongitude TEXT
+            endLongitude TEXT,
+            label TEXT
           )
           ''');
 
