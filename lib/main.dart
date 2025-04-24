@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'core/time_ttk.dart';
-import 'core/location_ttk.dart';
-import 'database/db_helper.dart';
-import 'database/main_table.dart';
-import 'database/location_table.dart';
+import 'core/functionality/time/time_ttk.dart';
+import 'core/functionality/location/location_ttk.dart';
+import 'core/database/db_helper.dart';
+import 'core/data/main_table.dart';
+import 'core/data/location_table.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-//TODO: App cannot get location data when it runs in background
 
 MainTable mainData = MainTable();
 LocationTable locationData = LocationTable();
@@ -15,26 +14,6 @@ LocationTable locationData = LocationTable();
 LocationTTK locationTTK = LocationTTK();
 
 DatabaseHelper dbHelper = DatabaseHelper.instance;
-
-Map<String, dynamic>? initialItem;
-
-Future<void> initialInsert() async {
-  dbHelper.addColumn('label',
-      'mainTable'); //label column is added (note that it is a temp solution, will be more structured later on)
-  var list = await dbHelper.select('mainTable');
-  if (list.isEmpty) {
-    locationData.recordID = 1;
-    for (int i = 0; i < 1; i++) {
-      Map<String, dynamic> row = {
-        'recordID': i,
-        "startTime": '01-01-2025 12:00:00',
-        "endTime": '01-01-2025 13:00:00',
-        "elapsedMilisecs": 3600000,
-      };
-      await dbHelper.insert(row, "mainTable");
-    }
-  }
-}
 
 Future<bool> setLocationPermission() async {
   return locationTTK.locationPermission();
@@ -44,7 +23,6 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   //FlutterForegroundTask.initCommunicationPort();
   setLocationPermission();
-  initialInsert();
   runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
 }
 
@@ -64,14 +42,15 @@ class _MainAppState extends State<MainApp> {
   late TextEditingController controller = TextEditingController();
 
   void _pressHandler() async {
-    // Note that I defined 0th index as test index
     var list = await dbHelper.select('mainTable');
-    initialItem = list.first;
-    if (initialItem?['recordID'] == 0) {
-      dbHelper.delete(0, "mainTable");
+
+    if (list.isEmpty) {
+      locationData.recordID = 1;
+      mainData.recordID = 1;
+    } else {
+      locationData.recordID = list.last['recordID'] + 1;
+      mainData.recordID = list.last['recordID'] + 1;
     }
-    locationData.recordID = list.last['recordID'] + 1;
-    mainData.recordID = list.last['recordID'] + 1;
 
     timeTTK.start();
     locationTTK.startListeningLocation();
