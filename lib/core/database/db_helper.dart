@@ -1,6 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'tables.dart';
 
 class DatabaseHelper {
   DatabaseHelper();
@@ -14,7 +14,22 @@ class DatabaseHelper {
   Future<Database> _initializeDB() async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, "TTK.db");
-    return await openDatabase(path, version: 1, onCreate: createTables);
+    return await openDatabase(path, version: 1, onCreate: initializeTables);
+  }
+
+  Future<void> initializeTables(Database db, int version) async {
+
+    String sqlCommand = await rootBundle.loadString("lib/core/database/sql/init/foreign_keys.sql");
+    await db.execute(sqlCommand);
+
+    await initializeTable(db, "mainTable");
+    await initializeTable(db, "location");
+
+  }
+
+  Future<void> initializeTable(Database db, String table) async {
+      String sqlCommand = await rootBundle.loadString('lib/core/database/sql/create/$table.sql');
+      await db.execute(sqlCommand);
   }
 
   Future<List<Map<String, dynamic>>> select(String table) async {
@@ -62,7 +77,25 @@ class DatabaseHelper {
           ALTER TABLE $table ADD COLUMN $rowName;
           ''');
     }
-
   }
 
+  Future<void> addTable(String table) async {
+    final dbHelper = DatabaseHelper.instance;
+    final db = await dbHelper.database;
+    bool doesExist = true;
+    final result = await db.rawQuery('PRAGMA table_list');
+    for (var column in result) {
+      if (column['name'] != table) {
+        doesExist = false;
+      } else {
+        doesExist = true;
+        break;
+      }
+    }
+    if (!doesExist) {
+      String sqlCommand = await rootBundle.loadString('lib/core/database/sql/create/$table.sql');
+      await db.execute(sqlCommand);
+    }
+  }
 }
+
