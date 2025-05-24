@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'core/functionality/time/time_ttk.dart';
 import 'core/functionality/location/location_ttk.dart';
@@ -110,7 +111,9 @@ class _MainAppState extends State<MainApp> {
     mainData.elapsedMilisecs = timeTTK.lastTime;
     mainData.endLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();
-    mainData.label = await _labelInputBox();
+    //mainData.label = await _labelInputBox();
+    mainData.label = controller.text;
+    controller.clear();
     Map<String, dynamic> row = {
       'recordID': recordID,
       'startTime': startTime,
@@ -130,6 +133,23 @@ class _MainAppState extends State<MainApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "TTK App",
+      theme: ThemeData(
+        inputDecorationTheme: const InputDecorationTheme(
+          outlineBorder: BorderSide(
+            color:Colors.red,
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+              color:Colors.red
+            )
+          )
+        ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.red,
+          selectionColor: Colors.red,
+          selectionHandleColor: Colors.red,
+        )
+      ),
       home: Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -143,6 +163,8 @@ class _MainAppState extends State<MainApp> {
               _lastData(),
               const SizedBox(height: 10),
               _currentLocation(),
+              const SizedBox(height: 10),
+              _labelTextBox(),
             ],
           ),
         ),
@@ -151,7 +173,6 @@ class _MainAppState extends State<MainApp> {
   }
 
   Future<String?> _labelInputBox() => showDialog<String>(
-        //does not work at the moment
         context: context,
         builder: (dialogContext) => AlertDialog(
           backgroundColor: const Color.fromARGB(255, 67, 66, 66),
@@ -250,6 +271,24 @@ class _MainAppState extends State<MainApp> {
     }
 
     return Container(child: _commonText(textField, 20));
+  }
+
+  Container _labelTextBox() {
+    return Container(
+      width: 300,
+      child: TextFormField(
+        cursorColor: Colors.white,
+        controller: controller,
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+        enabled: isPressed,
+        decoration: const InputDecoration(
+        
+          hintText: 'Enter the label',
+        ),
+      ),
+    );
   }
 
   Text _commonText(String text, double fontSize) {
