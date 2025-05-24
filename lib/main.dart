@@ -156,6 +156,7 @@ class _MainAppState extends State<MainApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(height: 60), //temporary solution for centering
               _timeText(),
               const SizedBox(height: 10),
               _startButton(),
