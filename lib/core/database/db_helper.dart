@@ -32,6 +32,18 @@ class DatabaseHelper {
       await db.execute(sqlCommand);
   }
 
+  Future<void> initializeNewColumns() async {
+    //new column handling will be automated in the future.
+
+    //columns for altitude and speed update
+    await addColumn("startAltitude", "mainTable");
+    await addColumn("endAltitude", "mainTable");
+    await addColumn("altitude", "location");
+    await addColumn("speed", "location");
+
+    
+  }
+
   Future<List<Map<String, dynamic>>> select(String table) async {
     final dbHelper = DatabaseHelper.instance;
     final db = await dbHelper.database;

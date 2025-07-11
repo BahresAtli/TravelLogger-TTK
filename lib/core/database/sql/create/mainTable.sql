@@ -5,7 +5,9 @@ CREATE TABLE mainTable (
     elapsedMilisecs INTEGER,
     startLatitude TEXT,
     startLongitude TEXT,
+    startAltitude TEXT,
     endLatitude TEXT,
     endLongitude TEXT,
+    endAltitude TEXT,
     label TEXT
 );

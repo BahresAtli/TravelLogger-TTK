@@ -8,8 +8,10 @@ class MainTable extends ObjectBase {
   late int? elapsedMilisecs;
   late String? startLatitude;
   late String? startLongitude;
+  late String? startAltitude;
   late String? endLatitude;
   late String? endLongitude;
+  late String? endAltitude;
   late String? label;
 
   MainTable();

@@ -24,6 +24,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   //FlutterForegroundTask.initCommunicationPort();
   setLocationPermission();
+  dbHelper.initializeNewColumns();
   runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
 }
 
@@ -45,6 +46,7 @@ class _MainAppState extends State<MainApp> {
   void _pressHandler() async {
     var list = await dbHelper.select('mainTable');
 
+    //manually setting the record id of the location and maindata tables
     if (list.isEmpty) {
       locationData.recordID = 1;
       mainData.recordID = 1;
@@ -53,26 +55,30 @@ class _MainAppState extends State<MainApp> {
       mainData.recordID = list.last['recordID'] + 1;
     }
 
+    //start the operations
     timeTTK.start();
     locationTTK.startListeningLocation();
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
     WakelockPlus
         .enable(); //don't turn off the screen, temporary solution for background issue
-
+    //set state every second
     timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState(() {});
     });
 
+    //wait the app to get location before it starts to save initial data on the mainTable
     await locationTTK.getPosition();
     mainData.startLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.startLongitude = locationTTK.currentPosition?.longitude.toString();
+    mainData.startAltitude = locationTTK.currentPosition?.altitude.toString();
     mainData.label = "Error: App crashed/Connection lost while measuring";
     Map<String, dynamic> mainRow = {
       //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
       'startTime': mainData.startTime,
       'startLatitude': mainData.startLatitude,
       'startLongitude': mainData.startLongitude,
+      'startAltitude': mainData.startAltitude,
       'label': mainData.label,
     };
     await dbHelper.insert(mainRow, 'mainTable');
@@ -81,14 +87,17 @@ class _MainAppState extends State<MainApp> {
         Timer.periodic(const Duration(seconds: 10), (Timer t) async {
       locationData.locationOrder++;
       locationData.latitude = locationTTK.currentPosition?.latitude.toString();
-      locationData.longitude =
-          locationTTK.currentPosition?.longitude.toString();
+      locationData.longitude = locationTTK.currentPosition?.longitude.toString();
+      locationData.altitude = locationTTK.currentPosition?.altitude.toString();
+      locationData.speed = locationTTK.currentPosition?.speed.toString();
       locationData.timeAtInstance = DateTime.now().toString();
       Map<String, dynamic> locationRow = {
         'recordID': locationData.recordID,
         'locationOrder': locationData.locationOrder,
         'latitude': locationData.latitude,
         'longitude': locationData.longitude,
+        'altitude' : locationData.altitude,
+        'speed': locationData.speed,
         'timeAtInstance': locationData.timeAtInstance
       };
       await dbHelper.insert(locationRow, 'location');
@@ -107,10 +116,11 @@ class _MainAppState extends State<MainApp> {
     String? startTime = mainData.startTime;
     String? startLatitude = mainData.startLatitude;
     String? startLongitude = mainData.startLongitude; 
-
+    String? startAltitude = mainData.startAltitude;
     mainData.elapsedMilisecs = timeTTK.lastTime;
     mainData.endLatitude = locationTTK.currentPosition?.latitude.toString();
     mainData.endLongitude = locationTTK.currentPosition?.longitude.toString();
+    mainData.endAltitude = locationTTK.currentPosition?.altitude.toString();
     //mainData.label = await _labelInputBox();
     mainData.label = controller.text;
     controller.clear();
@@ -121,8 +131,10 @@ class _MainAppState extends State<MainApp> {
       'elapsedMilisecs': mainData.elapsedMilisecs,
       'startLatitude': startLatitude,
       'startLongitude': startLongitude,
+      'startAltitude': startAltitude,
       'endLatitude': mainData.endLatitude,
       'endLongitude': mainData.endLongitude,
+      'endAltitude': mainData.endAltitude,
       'label': mainData.label
     };
     await dbHelper.update(row, 'mainTable');
@@ -156,12 +168,12 @@ class _MainAppState extends State<MainApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 60), //temporary solution for centering
+              const SizedBox(height: 75), //temporary solution for centering
               _timeText(),
               const SizedBox(height: 10),
               _startButton(),
               const SizedBox(height: 10),
-              _lastData(),
+              _altitudeAndSpeed(),
               const SizedBox(height: 10),
               _currentLocation(),
               const SizedBox(height: 10),
@@ -257,9 +269,14 @@ class _MainAppState extends State<MainApp> {
     );
   }
 
-  Container _lastData() {
-    String textField =
-        'Last Measured Time: ${timeTTK.formatElapsedToText(timeTTK.lastTime)}';
+  Container _altitudeAndSpeed() {
+
+    String textField = 'Press Start to see altitude and speed.';
+
+    if (isPressed) {
+      double? kmh = locationTTK.currentPosition?.speed;
+      textField = '${locationTTK.currentPosition?.altitude.toStringAsPrecision(4)} m, ${kmh?.toStringAsPrecision(4)} km/h';
+    }
 
     return Container(child: _commonText(textField, 20));
   }

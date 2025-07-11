@@ -4,6 +4,8 @@ CREATE TABLE location (
     locationOrder INTEGER,
     latitude TEXT,
     longitude TEXT,
+    altitude TEXT,
+    speed TEXT,
     timeAtInstance TEXT,
     FOREIGN KEY(recordID) REFERENCES recordsTTK(recordID)
 );
