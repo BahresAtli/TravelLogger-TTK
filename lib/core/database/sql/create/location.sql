@@ -6,6 +6,7 @@ CREATE TABLE location (
     longitude TEXT,
     altitude TEXT,
     speed TEXT,
+    elapsedDistance REAL,
     timeAtInstance TEXT,
     FOREIGN KEY(recordID) REFERENCES recordsTTK(recordID)
 );

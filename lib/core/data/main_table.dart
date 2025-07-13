@@ -6,6 +6,7 @@ class MainTable extends ObjectBase {
   late String? startTime;
   late String? endTime;
   late int? elapsedMilisecs;
+  late double? distance;
   late String? startLatitude;
   late String? startLongitude;
   late String? startAltitude;
@@ -14,6 +15,8 @@ class MainTable extends ObjectBase {
   late String? endAltitude;
   late String? label;
 
-  MainTable();
+  MainTable() {
+    distance = 0.0;
+  }
 
 }

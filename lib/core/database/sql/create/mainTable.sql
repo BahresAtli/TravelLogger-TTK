@@ -3,6 +3,7 @@ CREATE TABLE mainTable (
     startTime TEXT,
     endTime TEXT,
     elapsedMilisecs INTEGER,
+    distance REAL,
     startLatitude TEXT,
     startLongitude TEXT,
     startAltitude TEXT,

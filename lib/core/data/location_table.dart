@@ -9,6 +9,7 @@ class LocationTable extends ObjectBase {
   late String? longitude;
   late String? altitude;
   late String? speed;
+  late double? elapsedDistance;
   late String? timeAtInstance;
 
   LocationTable();

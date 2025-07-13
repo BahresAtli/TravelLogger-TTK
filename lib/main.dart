@@ -7,6 +7,7 @@ import 'core/database/db_helper.dart';
 import 'core/data/main_table.dart';
 import 'core/data/location_table.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:geolocator/geolocator.dart';
 
 
 MainTable mainData = MainTable();
@@ -60,11 +61,21 @@ class _MainAppState extends State<MainApp> {
     locationTTK.startListeningLocation();
     locationData.locationOrder = 0;
     mainData.startTime = DateTime.now().toString();
+    mainData.distance = 0.0;
+    double distanceDifference = 0.0;
+    late Position? previousPosition;
+    previousPosition = locationTTK.currentPosition;
+
     WakelockPlus
         .enable(); //don't turn off the screen, temporary solution for background issue
     //set state every second
     timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState(() {});
+      if (previousPosition != null && locationTTK.currentPosition != null) {
+        distanceDifference = await locationTTK.calculateDistance(previousPosition, locationTTK.currentPosition);
+        mainData.distance = mainData.distance! + distanceDifference;
+      }
+      previousPosition = locationTTK.currentPosition;
     });
 
     //wait the app to get location before it starts to save initial data on the mainTable
@@ -90,6 +101,7 @@ class _MainAppState extends State<MainApp> {
       locationData.longitude = locationTTK.currentPosition?.longitude.toString();
       locationData.altitude = locationTTK.currentPosition?.altitude.toString();
       locationData.speed = locationTTK.currentPosition?.speed.toString();
+      locationData.elapsedDistance = mainData.distance;
       locationData.timeAtInstance = DateTime.now().toString();
       Map<String, dynamic> locationRow = {
         'recordID': locationData.recordID,
@@ -98,7 +110,8 @@ class _MainAppState extends State<MainApp> {
         'longitude': locationData.longitude,
         'altitude' : locationData.altitude,
         'speed': locationData.speed,
-        'timeAtInstance': locationData.timeAtInstance
+        'elapsedDistance': locationData.elapsedDistance,
+        'timeAtInstance': locationData.timeAtInstance,
       };
       await dbHelper.insert(locationRow, 'location');
     });
@@ -129,6 +142,7 @@ class _MainAppState extends State<MainApp> {
       'startTime': startTime,
       'endTime': mainData.endTime,
       'elapsedMilisecs': mainData.elapsedMilisecs,
+      'distance': mainData.distance,
       'startLatitude': startLatitude,
       'startLongitude': startLongitude,
       'startAltitude': startAltitude,
@@ -138,7 +152,9 @@ class _MainAppState extends State<MainApp> {
       'label': mainData.label
     };
     await dbHelper.update(row, 'mainTable');
+    mainData.distance = 0.0;
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +189,7 @@ class _MainAppState extends State<MainApp> {
               const SizedBox(height: 10),
               _startButton(),
               const SizedBox(height: 10),
-              _altitudeAndSpeed(),
+              _distanceAndSpeed(),
               const SizedBox(height: 10),
               _currentLocation(),
               const SizedBox(height: 10),
@@ -269,13 +285,16 @@ class _MainAppState extends State<MainApp> {
     );
   }
 
-  Container _altitudeAndSpeed() {
+  Container _distanceAndSpeed() {
 
-    String textField = 'Press Start to see altitude and speed.';
+    String textField = 'Press Start to see distance and speed.';
 
     if (isPressed) {
       double? kmh = locationTTK.currentPosition?.speed;
-      textField = '${locationTTK.currentPosition?.altitude.toStringAsPrecision(4)} m, ${kmh?.toStringAsPrecision(4)} km/h';
+      if (kmh != null) {
+        kmh = kmh * 3.6;
+        textField = ' ${mainData.distance?.toStringAsFixed(2)} m, ${kmh.toStringAsFixed(2)} km/h';        
+      }
     }
 
     return Container(child: _commonText(textField, 20));

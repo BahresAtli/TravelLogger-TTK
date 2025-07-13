@@ -41,6 +41,10 @@ class DatabaseHelper {
     await addColumn("altitude", "location");
     await addColumn("speed", "location");
 
+    //columns for speed
+    await addColumn("distance", "mainTable");
+    await addColumn("elapsedDistance", "location");
+
     
   }
 

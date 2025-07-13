@@ -1,5 +1,7 @@
+import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'package:flutter_map_math/flutter_cluster.dart';
 
 class LocationTTK {
 
@@ -47,6 +49,9 @@ class LocationTTK {
   void startListeningLocation() {
     subscription = Geolocator.getPositionStream(
       locationSettings: AndroidSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 1,
+        intervalDuration: const Duration(seconds:1),
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'ttkApp', 
           notificationText: 'ttkapp is getting the Location',
@@ -76,9 +81,31 @@ class LocationTTK {
 
   }
 
+  Future<double> calculateDistance(Position? prev, Position? curr) async { 
+    if (prev == null || curr == null) return 0.0;
+    
+    double distance = FlutterMapMath.distanceBetween(
+      prev.latitude,
+      prev.longitude,
+      curr.latitude,
+      curr.longitude,
+      ''
+    );
+
+    return distance;
+  }
+
+  String convertDetailsToString(Position position, double distance) {
+    //double kmh = position.speed * 3.6;
+    
+
+
+    return '';
+  }
+
   String convertPositionToString() {
     
-    return '${currentPosition?.latitude.toString()} ${currentPosition?.longitude.toString()}';
+    return '${currentPosition?.latitude.toStringAsFixed(7)}, ${currentPosition?.longitude.toStringAsFixed(7)}, ${currentPosition?.altitude.toStringAsFixed(2)}';
   }
 
 }
