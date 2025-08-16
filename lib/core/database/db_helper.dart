@@ -24,6 +24,7 @@ class DatabaseHelper {
 
     await initializeTable(db, "mainTable");
     await initializeTable(db, "location");
+    await initializeTable(db, "appConfig");
 
   }
 
@@ -32,18 +33,27 @@ class DatabaseHelper {
       await db.execute(sqlCommand);
   }
 
-  Future<void> initializeNewColumns() async {
+  Future<void> initializeNewColumns(String version) async {
     //new column handling will be automated in the future.
+    switch(version){
+      case '0.0.1':
+        await refreshTable("mainTable");
+        await refreshTable("location");
+
+        await initializeNewColumns('0.0.0');
+        break;
+      case '0.0.0':
+        break;
+      default:
+        break;
+    }
+
 
     //columns for altitude and speed update
-    await addColumn("startAltitude", "mainTable");
-    await addColumn("endAltitude", "mainTable");
-    await addColumn("altitude", "location");
-    await addColumn("speed", "location");
 
-    //columns for speed
-    await addColumn("distance", "mainTable");
-    await addColumn("elapsedDistance", "location");
+
+    //columns for travel type
+    //await addColumn("travelType", "mainTable", "INT");
 
     
   }
@@ -61,11 +71,11 @@ class DatabaseHelper {
     return await db.insert(table, row);
   }
 
-  Future<int> update(Map<String, dynamic> row, String table) async {
+  Future<int> update(Map<String, dynamic> row, String table, String idName) async {
     final dbHelper = DatabaseHelper.instance;
     final db = await dbHelper.database;
-    int id = row['recordID'];
-    return await db.update(table, row, where: 'recordID = ?', whereArgs: [id]);
+    int id = row[idName];
+    return await db.update(table, row, where: '$idName = ?', whereArgs: [id]);
   }
 
 
@@ -75,13 +85,13 @@ class DatabaseHelper {
     return await db.delete(table, where: 'recordID = ?' , whereArgs: [id]);
   }
 
-  Future<void> addColumn(String rowName, String table) async {
+  Future<void> addColumn(String columnName, String table, String type) async {
     final dbHelper = DatabaseHelper.instance;
     final db = await dbHelper.database;
     bool doesExist = true;
     final result = await db.rawQuery('PRAGMA table_info($table)');
     for (var column in result) {
-      if (column['name'] != rowName) {
+      if (column['name'] != columnName) {
         doesExist = false;
       } else {
         doesExist = true;
@@ -90,7 +100,7 @@ class DatabaseHelper {
     }
     if (!doesExist) {
         await db.execute('''
-          ALTER TABLE $table ADD COLUMN $rowName;
+          ALTER TABLE $table ADD COLUMN $columnName $type;
           ''');
     }
   }
@@ -98,6 +108,15 @@ class DatabaseHelper {
   Future<void> addTable(String table) async {
     final dbHelper = DatabaseHelper.instance;
     final db = await dbHelper.database;
+    bool doesExist = await doesTableExist(db, table);
+
+    if (!doesExist) {
+      String sqlCommand = await rootBundle.loadString('lib/core/database/sql/create/$table.sql');
+      await db.execute(sqlCommand);
+    }
+  }
+
+  Future<bool> doesTableExist(Database db, String table) async {
     bool doesExist = true;
     final result = await db.rawQuery('PRAGMA table_list');
     for (var column in result) {
@@ -108,10 +127,32 @@ class DatabaseHelper {
         break;
       }
     }
-    if (!doesExist) {
-      String sqlCommand = await rootBundle.loadString('lib/core/database/sql/create/$table.sql');
-      await db.execute(sqlCommand);
+    return doesExist;
+  }
+
+  Future<void> refreshTable(String table) async {
+    final dbHelper = DatabaseHelper.instance;
+    final db = await dbHelper.database;
+    bool doesExist = await doesTableExist(db, table);
+
+    if(!doesExist) {
+      print("The specified table $table does not exist.");
+      return;
     }
+    String sqlCommand = await rootBundle.loadString('lib/core/database/sql/refresh/refresh_$table.sql');
+    await executeMultipleQueries(db, sqlCommand);
+    print("Table refreshing finished for the table $table");
+    return;
+  }
+
+  Future<void> executeMultipleQueries(Database db, String multipleQueryString) async {
+    List<String> queries = multipleQueryString.split(';');
+    for (int i = 0; i < queries.length - 1; i++) {
+      await db.execute(queries[i]);
+    }
+
+    return;
   }
 }
+
 

@@ -1,14 +1,14 @@
-CREATE TABLE mainTable (
+CREATE TABLE IF NOT EXISTS mainTable (
     recordID INTEGER PRIMARY KEY,
     startTime TEXT,
     endTime TEXT,
     elapsedMilisecs INTEGER,
     distance REAL,
-    startLatitude TEXT,
-    startLongitude TEXT,
-    startAltitude TEXT,
-    endLatitude TEXT,
-    endLongitude TEXT,
-    endAltitude TEXT,
+    startLatitude REAL,
+    startLongitude REAL,
+    startAltitude REAL,
+    endLatitude REAL,
+    endLongitude REAL,
+    endAltitude REAL,
     label TEXT
 );

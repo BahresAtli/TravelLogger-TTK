@@ -9,6 +9,7 @@ import 'core/data/location_table.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:geolocator/geolocator.dart';
 
+const String APP_VERSION = "0.0.1";
 
 MainTable mainData = MainTable();
 LocationTable locationData = LocationTable();
@@ -17,15 +18,62 @@ LocationTTK locationTTK = LocationTTK();
 
 DatabaseHelper dbHelper = DatabaseHelper.instance;
 
+bool stable = true;
+
 Future<bool> setLocationPermission() async {
   return locationTTK.locationPermission();
+}
+
+Future<void> appInitialization() async {
+  //temp solution
+  stable = false;
+  final db = await dbHelper.database;
+  await dbHelper.initializeTable(db, "appConfig");
+
+  List<Map<String, dynamic>> config = await dbHelper.select("appConfig");
+
+  late Map<String, dynamic> configInfo;
+
+  if(config.isNotEmpty) configInfo = config[0];
+
+  if (config.isEmpty) { //app is just installed to the system
+    configInfo = {
+      'versionInfo': APP_VERSION,
+      'firstBoot': 0,
+    };
+    await dbHelper.insert(configInfo, "appConfig");
+    configInfo = {
+      // just so the config info is not equal to app version
+      // it is going to run the code below in every fresh install regardless,
+      // even though it is not needed for fresh installs. 
+      // because upgrading from 0.0.0 is looking like first boot to the system,
+      // which is not true and tables need to be refreshed, just for this instance
+      // better implementation will come in the future
+      'versionInfo': "0.0.0", 
+      'firstBoot': 0,
+    };
+  }
+
+  if (configInfo["versionInfo"] != APP_VERSION) {
+    await dbHelper.initializeNewColumns(APP_VERSION);
+    Map<String, dynamic> configInfo = {
+      'appConfigID': 1,
+      'versionInfo': APP_VERSION,
+      'firstBoot': 0,
+    };
+    await dbHelper.update(configInfo, "appConfig", "appConfigID");
+  }
+
+  stable = true;
+
+  return;
 }
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   //FlutterForegroundTask.initCommunicationPort();
   setLocationPermission();
-  dbHelper.initializeNewColumns();
+  appInitialization();
   runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
 }
 
@@ -39,10 +87,25 @@ class _MainAppState extends State<MainApp> {
   bool isPressed = false;
 
   Timer? timerLocation;
+  Timer? initialSetState;
   Timer? timerState;
   Timer? timerDatabase;
   TimeTTK timeTTK = TimeTTK();
   late TextEditingController controller = TextEditingController();
+
+
+  // initState() → widget ilk kez ekrana geldiğinde 1 kere çalışır.
+  // dispose() → widget ekrandan kalkarken çalışır (ör. başka sayfaya gidildiğinde).
+  // Bu yüzden timer gibi şeyler initState’de başlatılır, dispose’da kapatılır.
+
+  @override
+  void initState() {
+    super.initState();
+    initialSetState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
+      setState(() {});
+    });
+  }
+
 
   void _pressHandler() async {
     var list = await dbHelper.select('mainTable');
@@ -70,7 +133,7 @@ class _MainAppState extends State<MainApp> {
         .enable(); //don't turn off the screen, temporary solution for background issue
     //set state every second
     timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
-      setState(() {});
+      setState((){});
       if (previousPosition != null && locationTTK.currentPosition != null) {
         distanceDifference = await locationTTK.calculateDistance(previousPosition, locationTTK.currentPosition);
         mainData.distance = mainData.distance! + distanceDifference;
@@ -95,7 +158,7 @@ class _MainAppState extends State<MainApp> {
     await dbHelper.insert(mainRow, 'mainTable');
 
     timerDatabase =
-        Timer.periodic(const Duration(seconds: 10), (Timer t) async {
+        Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
       locationData.locationOrder++;
       locationData.latitude = locationTTK.currentPosition?.latitude.toString();
       locationData.longitude = locationTTK.currentPosition?.longitude.toString();
@@ -151,9 +214,10 @@ class _MainAppState extends State<MainApp> {
       'endAltitude': mainData.endAltitude,
       'label': mainData.label
     };
-    await dbHelper.update(row, 'mainTable');
+    await dbHelper.update(row, 'mainTable', "recordID");
     mainData.distance = 0.0;
   }
+  
 
 
   @override
@@ -194,6 +258,8 @@ class _MainAppState extends State<MainApp> {
               _currentLocation(),
               const SizedBox(height: 10),
               _labelTextBox(),
+              //const SizedBox(height: 10),
+              //_dropdownBox(),
             ],
           ),
         ),
@@ -266,17 +332,18 @@ class _MainAppState extends State<MainApp> {
   TextButton _startButton() {
     return TextButton(
       onPressed: () {
-        setState(
-          () {
+        setState((){});
+          if(stable) {
             if (isPressed == false) {
+              initialSetState?.cancel();
               _pressHandler();
             } else {
               _finishHandler();
             }
             isPressed = !isPressed;
+          }
           },
-        );
-      },
+      
       style: TextButton.styleFrom(
         backgroundColor: Colors.red,
         minimumSize: const Size(150, 50),
@@ -288,7 +355,9 @@ class _MainAppState extends State<MainApp> {
   Container _distanceAndSpeed() {
 
     String textField = 'Press Start to see distance and speed.';
-
+    if(!stable) {
+      textField = 'App is updated to $APP_VERSION';
+    }
     if (isPressed) {
       double? kmh = locationTTK.currentPosition?.speed;
       if (kmh != null) {
@@ -302,6 +371,10 @@ class _MainAppState extends State<MainApp> {
 
   Container _currentLocation() {
     String textField = 'Press Start to see location!';
+
+    if(!stable) {
+      textField = 'Please wait for database to adjust itself.';
+    }
 
     if (isPressed) {
       textField = locationTTK.convertPositionToString();
@@ -325,6 +398,12 @@ class _MainAppState extends State<MainApp> {
           hintText: 'Enter the label',
         ),
       ),
+    );
+  }
+
+  Container _dropdownBox() {
+    return Container(
+
     );
   }
 

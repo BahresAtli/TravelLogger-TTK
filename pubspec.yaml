@@ -25,3 +25,4 @@ flutter:
   assets:
     - lib/core/database/sql/init/
     - lib/core/database/sql/create/
+    - lib/core/database/sql/refresh/

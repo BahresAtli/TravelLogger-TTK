@@ -1,4 +1,3 @@
-
 import 'package:ttkapp/core/data/object_base.dart';
 
 class MainTable extends ObjectBase {
@@ -14,9 +13,26 @@ class MainTable extends ObjectBase {
   late String? endLongitude;
   late String? endAltitude;
   late String? label;
+  late TravelType? travelType;
 
   MainTable() {
     distance = 0.0;
+    travelType = TravelType.other;
   }
 
+}
+
+enum TravelType {
+  bus,
+  car,
+  walk,
+  bike,
+  intercityBus,
+  tram,
+  metroDescent,
+  metro,
+  metroAscent,
+  ferry,
+  other,
+  test,
 }
