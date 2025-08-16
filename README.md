@@ -2,10 +2,9 @@
 
 Download here!
 
-Release:
-Debug:
+Release: https://github.com/BahresAtli/TravelLogger-TTK/releases/download/TTK_0.0.1/TTK_0.0.1_release.apk
 
-Download here! https://github.com/BahresAtli/TravelLogger-TTK/releases/download/TTK_0.0.0/TTK_0.0.0.apk
+Debug: https://github.com/BahresAtli/TravelLogger-TTK/releases/download/TTK_0.0.1/TTK_0.0.1_debug.apk
 
 ## Important note
 
