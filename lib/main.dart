@@ -158,7 +158,7 @@ class _MainAppState extends State<MainApp> {
     await dbHelper.insert(mainRow, 'mainTable');
 
     timerDatabase =
-        Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
+        Timer.periodic(const Duration(seconds: 10), (Timer t) async { //changed to every sec for debugging
       locationData.locationOrder++;
       locationData.latitude = locationTTK.currentPosition?.latitude.toString();
       locationData.longitude = locationTTK.currentPosition?.longitude.toString();
