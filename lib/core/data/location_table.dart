@@ -2,16 +2,19 @@
 import 'package:ttkapp/core/data/object_base.dart';
 
 class LocationTable extends ObjectBase {
-  late int? locationRecordID;
+  late int locationRecordID;
   late int recordID;
   late int locationOrder;
-  late String? latitude;
-  late String? longitude;
-  late String? altitude;
-  late String? speed;
+  late double? latitude;
+  late double? longitude;
+  late double? altitude;
+  late double? speed;
   late double? elapsedDistance;
-  late String? timeAtInstance;
+  late DateTime? timeAtInstance;
 
-  LocationTable();
+  LocationTable() {
+    locationRecordID = 0;
+    locationOrder = 0;
+  }
 
 }

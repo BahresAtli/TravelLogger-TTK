@@ -1,7 +1,6 @@
 import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-import 'package:flutter_map_math/flutter_cluster.dart';
 
 class LocationTTK {
 

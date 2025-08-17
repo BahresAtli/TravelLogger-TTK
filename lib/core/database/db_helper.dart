@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../../core/data/constants.dart' as constants;
 
 class DatabaseHelper {
   DatabaseHelper();
@@ -22,9 +23,9 @@ class DatabaseHelper {
     String sqlCommand = await rootBundle.loadString("lib/core/database/sql/init/foreign_keys.sql");
     await db.execute(sqlCommand);
 
-    await initializeTable(db, "mainTable");
-    await initializeTable(db, "location");
-    await initializeTable(db, "appConfig");
+    await initializeTable(db, constants.mainTable);
+    await initializeTable(db, constants.locationTable);
+    await initializeTable(db, constants.appConfigTable);
 
   }
 
@@ -37,8 +38,8 @@ class DatabaseHelper {
     //new column handling will be automated in the future.
     switch(version){
       case '0.0.1':
-        await refreshTable("mainTable");
-        await refreshTable("location");
+        await refreshTable(constants.mainTable);
+        await refreshTable(constants.locationTable);
 
         await initializeNewColumns('0.0.0');
         break;
@@ -53,7 +54,7 @@ class DatabaseHelper {
 
 
     //columns for travel type
-    //await addColumn("travelType", "mainTable", "INT");
+    //await addColumn("travelType", constants.mainTable, "INT");
 
     
   }
@@ -136,12 +137,10 @@ class DatabaseHelper {
     bool doesExist = await doesTableExist(db, table);
 
     if(!doesExist) {
-      print("The specified table $table does not exist.");
       return;
     }
     String sqlCommand = await rootBundle.loadString('lib/core/database/sql/refresh/refresh_$table.sql');
     await executeMultipleQueries(db, sqlCommand);
-    print("Table refreshing finished for the table $table");
     return;
   }
 
