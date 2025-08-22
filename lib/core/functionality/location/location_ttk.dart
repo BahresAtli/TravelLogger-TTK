@@ -1,78 +1,71 @@
-import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import '../../data/result_base.dart';
 
 class LocationTTK {
 
-
-
-  LocationPermission? permission;
+  LocationPermission permission = LocationPermission.denied;
   Position? currentPosition;
   StreamSubscription? subscription;
+  bool isLocationEnabled = false;
 
-  Future<bool> locationPermission() async {
+  Future<Result<LocationPermission>> locationPermission() async {
+
     bool serviceEnabled;
-
-    // Test if location services are enabled.
+    
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
-      return false; //Future.error('Location services are disabled.');
+      return Result.success(LocationPermission.denied);
     }
 
     permission = await Geolocator.checkPermission();
+
+    if(permission == LocationPermission.unableToDetermine) {
+      return Result.failure('Unable to determine location status.');
+    }
+
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-        return false; //Future.error('Location permissions are denied');
-      }
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
-      return false; //Future.error('Location permissions are permanently denied, we cannot request permissions.');
-    }
+    isLocationEnabled = permission == LocationPermission.always || permission == LocationPermission.whileInUse;
 
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
-    return true;
+    return Result.success(permission);
   }
 
   void startListeningLocation() {
-    subscription = Geolocator.getPositionStream(
-      locationSettings: AndroidSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: 1,
-        intervalDuration: const Duration(seconds:1),
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: 'ttkApp', 
-          notificationText: 'ttkapp is getting the Location',
-          enableWakeLock: true,
-          )
-      )
-    ).listen((event) async {
-      currentPosition = event;
-    });
+    if(isLocationEnabled) {
+      subscription = Geolocator.getPositionStream(
+        locationSettings: AndroidSettings(
+          accuracy: LocationAccuracy.best,
+          distanceFilter: 1,
+          intervalDuration: const Duration(seconds:1),
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationTitle: 'ttkApp', 
+            notificationText: 'ttkapp is getting the Location',
+            enableWakeLock: true,
+            )
+        )
+      ).listen((event) async {
+        currentPosition = event;
+      });
+
+    } else {
+      return;
+    }
+
   }
 
 
-  Future<Position> getPosition() async {
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
+  Future<Position?> getPosition() async {
+    if (isLocationEnabled) {
         currentPosition = await Geolocator.getCurrentPosition();
       return await Geolocator.getCurrentPosition();
     }
-    currentPosition = null;
-    return Future.error('location denied');
+    return null;
   }
-  //not really used currently
+
+  //deprecated
   void changeLocation(bool run) async {
     Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       await getPosition();
@@ -83,27 +76,26 @@ class LocationTTK {
   Future<double> calculateDistance(Position? prev, Position? curr) async { 
     if (prev == null || curr == null) return 0.0;
     
-    double distance = FlutterMapMath.distanceBetween(
+    double distance = Geolocator.distanceBetween(
       prev.latitude,
       prev.longitude,
       curr.latitude,
       curr.longitude,
-      ''
     );
 
     return distance;
   }
 
-  String convertDetailsToString(Position position, double distance) {
-    //double kmh = position.speed * 3.6;
-    
-
-
-    return '';
-  }
-
   String convertPositionToString() {
-    
+
+    if (!isLocationEnabled) {
+      return 'Location permission is disabled.';
+    }
+
+    if (currentPosition == null) {
+      return 'Waiting for the location to be available..';
+    }
+
     return '${currentPosition?.latitude.toStringAsFixed(7)}, ${currentPosition?.longitude.toStringAsFixed(7)}, ${currentPosition?.altitude.toStringAsFixed(2)}';
   }
 

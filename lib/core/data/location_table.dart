@@ -14,6 +14,7 @@ class LocationTable extends ObjectBase {
 
   LocationTable() {
     locationRecordID = 0;
+    recordID = 0;
     locationOrder = 0;
   }
 

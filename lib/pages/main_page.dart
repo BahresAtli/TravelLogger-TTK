@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/functionality/time/time_ttk.dart';
 import '../core/functionality/location/location_ttk.dart';
 import '../core/database/db_helper.dart';
 import '../core/data/main_table.dart';
 import '../core/data/location_table.dart';
+import '../core/data/result_base.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import '../core/data/constants.dart' as constants;
@@ -12,20 +14,16 @@ import '../core/data/constants.dart' as constants;
 class PageData {
 
   DatabaseHelper dbHelper;
-
   MainTable mainData;
   LocationTable locationData;
-
   LocationTTK locationTTK;
   TimeTTK timeTTK;
-
   bool stable;
   bool isPressed;
-
+  bool isLocationEnabled;
   Timer? initialSetState;
   Timer? timerState;
   Timer? timerDatabase;
-
   TextEditingController textEditingController;
 
   PageData() : 
@@ -36,6 +34,7 @@ class PageData {
     timeTTK = TimeTTK(),
     stable = true,
     isPressed = false,
+    isLocationEnabled = false,
     textEditingController = TextEditingController();
 }
 
@@ -55,15 +54,25 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
-    setLocationPermission();
     appInitialization();
+    setLocationPermission();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     pageData.initialSetState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState(() {});
     });
   }
 
-  Future<bool> setLocationPermission() async {
-    return pageData.locationTTK.locationPermission();
+  Future<Result<int>> setLocationPermission() async {
+
+    Result<LocationPermission> permission = await pageData.locationTTK.locationPermission();
+
+    if(!permission.isSuccess) {
+      return Result.failure(permission.error);
+    }
+
+    pageData.isLocationEnabled = permission.data == LocationPermission.always || permission.data == LocationPermission.whileInUse;
+
+    return Result.success();
   }
 
   Future<void> appInitialization() async {
@@ -112,17 +121,16 @@ class _MainAppState extends State<MainApp> {
 
     //start the operations
     pageData.timeTTK.start();
+    pageData.mainData.startTime = DateTime.now();
+    WakelockPlus.enable();
+
     pageData.locationTTK.startListeningLocation();
     pageData.locationData.locationOrder = 0;
-    pageData.mainData.startTime = DateTime.now();
     pageData.mainData.distance = 0.0;
     double distanceDifference = 0.0;
     late Position? previousPosition;
     previousPosition = pageData.locationTTK.currentPosition;
 
-    WakelockPlus
-        .enable(); //don't turn off the screen, temporary solution for background issue
-    //set state every second
     pageData.timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState((){});
       if (previousPosition != null && pageData.locationTTK.currentPosition != null) {
@@ -149,27 +157,30 @@ class _MainAppState extends State<MainApp> {
     pageData.mainData.recordID = await pageData.dbHelper.insert(mainRow, constants.mainTable);
     pageData.locationData.recordID = pageData.mainData.recordID; 
 
-    pageData.timerDatabase =
-    Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
-      pageData.locationData.locationOrder++;
-      pageData.locationData.latitude = pageData.locationTTK.currentPosition?.latitude;
-      pageData.locationData.longitude = pageData.locationTTK.currentPosition?.longitude;
-      pageData.locationData.altitude = pageData.locationTTK.currentPosition?.altitude;
-      pageData.locationData.speed = pageData.locationTTK.currentPosition?.speed;
-      pageData.locationData.elapsedDistance = pageData.mainData.distance;
-      pageData.locationData.timeAtInstance = DateTime.now();
-      Map<String, dynamic> locationRow = {
-        'recordID': pageData.locationData.recordID,
-        'locationOrder': pageData.locationData.locationOrder,
-        'latitude': pageData.locationData.latitude,
-        'longitude': pageData.locationData.longitude,
-        'altitude' : pageData.locationData.altitude,
-        'speed': pageData.locationData.speed,
-        'elapsedDistance': pageData.locationData.elapsedDistance,
-        'timeAtInstance': pageData.locationData.timeAtInstance.toString(),
-      };
-      pageData.locationData.locationRecordID = await pageData.dbHelper.insert(locationRow, 'location');
-    });
+    if(pageData.isLocationEnabled) {
+      pageData.timerDatabase =
+      Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
+        pageData.locationData.locationOrder++;
+        pageData.locationData.latitude = pageData.locationTTK.currentPosition?.latitude;
+        pageData.locationData.longitude = pageData.locationTTK.currentPosition?.longitude;
+        pageData.locationData.altitude = pageData.locationTTK.currentPosition?.altitude;
+        pageData.locationData.speed = pageData.locationTTK.currentPosition?.speed;
+        pageData.locationData.elapsedDistance = pageData.mainData.distance;
+        pageData.locationData.timeAtInstance = DateTime.now();
+        Map<String, dynamic> locationRow = {
+          'recordID': pageData.locationData.recordID,
+          'locationOrder': pageData.locationData.locationOrder,
+          'latitude': pageData.locationData.latitude,
+          'longitude': pageData.locationData.longitude,
+          'altitude' : pageData.locationData.altitude,
+          'speed': pageData.locationData.speed,
+          'elapsedDistance': pageData.locationData.elapsedDistance,
+          'timeAtInstance': pageData.locationData.timeAtInstance.toString(),
+        };
+        pageData.locationData.locationRecordID = await pageData.dbHelper.insert(locationRow, 'location');
+      });
+    }
+
   }
 
   void _finishHandler() async {
@@ -367,6 +378,8 @@ class _MainAppState extends State<MainApp> {
       if (kmh != null) {
         kmh = kmh * 3.6;
         textField = ' ${pageData.mainData.distance?.toStringAsFixed(2)} m, ${kmh.toStringAsFixed(2)} km/h';        
+      } else {
+        textField = 'Location permission is disabled.';
       }
     }
 
