@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../core/functionality/time/time_ttk.dart';
 import '../core/functionality/location/location_ttk.dart';
 import '../core/database/db_helper.dart';
@@ -25,6 +26,8 @@ class PageData {
   Timer? timerState;
   Timer? timerDatabase;
   TextEditingController textEditingController;
+  AppLocalizations? message;
+  bool delegateLoaded;
 
   PageData() : 
     dbHelper = DatabaseHelper.instance,
@@ -35,7 +38,8 @@ class PageData {
     stable = true,
     isPressed = false,
     isLocationEnabled = false,
-    textEditingController = TextEditingController();
+    textEditingController = TextEditingController(),
+    delegateLoaded = false;
 }
 
 class MainApp extends StatefulWidget {
@@ -62,6 +66,68 @@ class _MainAppState extends State<MainApp> {
     });
   }
 
+    @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: "TTK App",
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: ThemeData(
+        inputDecorationTheme: const InputDecorationTheme(
+          outlineBorder: BorderSide(
+            color:Colors.red,
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+              color:Colors.red
+            )
+          )
+        ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.red,
+          selectionColor: Colors.red,
+          selectionHandleColor: Colors.red,
+        )
+      ),
+      home: Builder(
+        builder: (context) {
+          var loc = AppLocalizations.of(context);
+          if (loc != null) {
+            return homePage(context);
+          }
+          return const Center(child: CircularProgressIndicator());
+        }
+      ),
+      
+    );
+  }
+
+  Widget homePage(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 75), //temporary solution for centering
+            _timeText(context),
+            const SizedBox(height: 10),
+            _startButton(context),
+            const SizedBox(height: 10),
+            _distanceAndSpeed(context),
+            const SizedBox(height: 10),
+            _currentLocation(context),
+            const SizedBox(height: 10),
+            _labelTextBox(context),
+            //const SizedBox(height: 10),
+            //_dropdownBox(),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<Result<int>> setLocationPermission() async {
 
     Result<LocationPermission> permission = await pageData.locationTTK.locationPermission();
@@ -71,6 +137,10 @@ class _MainAppState extends State<MainApp> {
     }
 
     pageData.isLocationEnabled = permission.data == LocationPermission.always || permission.data == LocationPermission.whileInUse;
+
+    if(!pageData.isLocationEnabled) {
+      //_locationInformation();
+    } 
 
     return Result.success();
   }
@@ -117,7 +187,9 @@ class _MainAppState extends State<MainApp> {
     return;
   }
 
-  void _pressHandler() async {
+  void _pressHandler(BuildContext context) async {
+
+    AppLocalizations? message = AppLocalizations.of(context);
 
     //start the operations
     pageData.timeTTK.start();
@@ -145,7 +217,7 @@ class _MainAppState extends State<MainApp> {
     pageData.mainData.startLatitude = pageData.locationTTK.currentPosition?.latitude;
     pageData.mainData.startLongitude = pageData.locationTTK.currentPosition?.longitude;
     pageData.mainData.startAltitude = pageData.locationTTK.currentPosition?.altitude;
-    pageData.mainData.label = "Error: App crashed/Connection lost while measuring";
+    pageData.mainData.label = message!.errorMeasure;
     Map<String, dynamic> mainRow = {
       //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
       'startTime': pageData.mainData.startTime.toString(),
@@ -219,55 +291,35 @@ class _MainAppState extends State<MainApp> {
     await pageData.dbHelper.update(row, constants.mainTable, "recordID");
     pageData.mainData.distance = 0.0;
   }
-  
 
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "TTK App",
-      theme: ThemeData(
-        inputDecorationTheme: const InputDecorationTheme(
-          outlineBorder: BorderSide(
-            color:Colors.red,
+  Future<String?> _locationInformation() => showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 67, 66, 66),
+          title: _commonText(AppLocalizations.of(context)!.attention, 20),
+          content: Text(
+            AppLocalizations.of(context)!.locationDenyDescription,
           ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-              color:Colors.red
+          contentTextStyle: const TextStyle(
+            color: Colors.white,
+          ),
+          actions: [
+            TextButton(
+              child: Text(
+                AppLocalizations.of(context)!.ok,
+                style: const TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             )
-          )
+          ]
         ),
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Colors.red,
-          selectionColor: Colors.red,
-          selectionHandleColor: Colors.red,
-        )
-      ),
-      home: Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 75), //temporary solution for centering
-              _timeText(),
-              const SizedBox(height: 10),
-              _startButton(),
-              const SizedBox(height: 10),
-              _distanceAndSpeed(),
-              const SizedBox(height: 10),
-              _currentLocation(),
-              const SizedBox(height: 10),
-              _labelTextBox(),
-              //const SizedBox(height: 10),
-              //_dropdownBox(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+      );
+  
   //for the old label system, maybe will be used later on
   /*
   Future<String?> _labelInputBox() => showDialog<String>(
@@ -320,8 +372,8 @@ class _MainAppState extends State<MainApp> {
       );
     */
 
-  Container _timeText() {
-    String textField = '-';
+  Container _timeText(BuildContext context) {
+    String textField = AppLocalizations.of(context)!.defaultText;
     if (pageData.isPressed) {
       textField = pageData.timeTTK.formatElapsedToText(null);
     }
@@ -333,7 +385,7 @@ class _MainAppState extends State<MainApp> {
     );
   }
 
-  TextButton _startButton() {
+  TextButton _startButton(BuildContext context) {
     if(pageData.stable) {
       return TextButton(
         onPressed: () {
@@ -341,7 +393,7 @@ class _MainAppState extends State<MainApp> {
             if(pageData.stable) {
               if (pageData.isPressed == false) {
                 pageData.initialSetState?.cancel();
-                _pressHandler();
+                _pressHandler(context);
               } else {
                 _finishHandler();
               }
@@ -352,7 +404,7 @@ class _MainAppState extends State<MainApp> {
           backgroundColor: Colors.red,
           minimumSize: const Size(150, 50),
         ),
-        child: pageData.isPressed ? _commonText('Finish', 20) : _commonText('Start', 20),
+        child: pageData.isPressed ? _commonText(AppLocalizations.of(context)!.finish, 20) : _commonText(AppLocalizations.of(context)!.start, 20),
       );
     } else {
       return TextButton(
@@ -361,46 +413,46 @@ class _MainAppState extends State<MainApp> {
           backgroundColor: Colors.red,
           minimumSize: const Size(150, 50),
         ),
-        child: _commonText('Please Wait', 20),
+        child: _commonText(AppLocalizations.of(context)!.pleaseWait, 20),
       );
     }
 
   }
 
-  Container _distanceAndSpeed() {
+  Container _distanceAndSpeed(BuildContext context) {
 
-    String textField = 'Press Start to see distance and speed.';
+    String textField = AppLocalizations.of(context)!.seeDistanceSpeed;
     if(!pageData.stable) {
-      textField = 'App is updated to ${constants.appVersion}';
+      textField = AppLocalizations.of(context)!.appUpdated(constants.appVersion);
     }
     if (pageData.isPressed) {
       double? kmh = pageData.locationTTK.currentPosition?.speed;
       if (kmh != null) {
         kmh = kmh * 3.6;
-        textField = ' ${pageData.mainData.distance?.toStringAsFixed(2)} m, ${kmh.toStringAsFixed(2)} km/h';        
+        textField = '${pageData.mainData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
       } else {
-        textField = 'Location permission is disabled.';
+        textField = AppLocalizations.of(context)!.locationDisabled;
       }
     }
 
     return Container(child: _commonText(textField, 20));
   }
 
-  Container _currentLocation() {
-    String textField = 'Press Start to see location!';
+  Container _currentLocation(BuildContext context) {
+    String textField = AppLocalizations.of(context)!.seeLocation;
 
     if(!pageData.stable) {
-      textField = 'Please wait for database to adjust itself.';
+      textField = AppLocalizations.of(context)!.waitDbAdjust;
     }
 
     if (pageData.isPressed) {
-      textField = pageData.locationTTK.convertPositionToString();
+      textField = pageData.locationTTK.convertPositionToString(AppLocalizations.of(context));
     }
 
     return Container(child: _commonText(textField, 20));
   }
 
-  SizedBox _labelTextBox() {
+  SizedBox _labelTextBox(BuildContext context) {
     return SizedBox(
       width: 300,
       child: TextFormField(
@@ -410,8 +462,8 @@ class _MainAppState extends State<MainApp> {
           color: Colors.white,
         ),
         enabled: pageData.isPressed,
-        decoration: const InputDecoration(
-          hintText: 'Enter the label',
+        decoration: InputDecoration(
+          hintText: AppLocalizations.of(context)!.enterLabel,
         ),
       ),
     );

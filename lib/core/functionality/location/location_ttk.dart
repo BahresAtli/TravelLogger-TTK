@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'dart:async';
 import '../../data/result_base.dart';
 
@@ -21,7 +22,7 @@ class LocationTTK {
     permission = await Geolocator.checkPermission();
 
     if(permission == LocationPermission.unableToDetermine) {
-      return Result.failure('Unable to determine location status.');
+      return Result.failure("Unable to determine location status.");
     }
 
     if (permission == LocationPermission.denied) {
@@ -86,14 +87,14 @@ class LocationTTK {
     return distance;
   }
 
-  String convertPositionToString() {
+  String convertPositionToString(AppLocalizations? message) {
 
     if (!isLocationEnabled) {
-      return 'Location permission is disabled.';
+      return message!.locationDisabled;
     }
 
     if (currentPosition == null) {
-      return 'Waiting for the location to be available..';
+      return message!.waitAvailableLocation;
     }
 
     return '${currentPosition?.latitude.toStringAsFixed(7)}, ${currentPosition?.longitude.toStringAsFixed(7)}, ${currentPosition?.altitude.toStringAsFixed(2)}';
