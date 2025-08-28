@@ -61,5 +61,8 @@
   "@unableDetermineLocation": {},
 
   "errorMeasure": "Error: App crashed/Connection lost while measuring",
-  "@errorMeasure": {}
+  "@errorMeasure": {},
+
+  "appInitializing": "App is initializing. Please wait.",
+  "@appInitializing": {}
 }

@@ -60,5 +60,8 @@
   "@unableDetermineLocation": {},
 
   "errorMeasure": "Hata: Ölçüm sırasında uygulama çöktü/bağlantı kesildi",
-  "@errorMeasure": {}
+  "@errorMeasure": {},
+
+  "appInitializing": "Uygulama başlatılmaya hazırlanıyor. Lütfen bekleyin.",
+  "@appInitializing": {}
 }
