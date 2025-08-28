@@ -1,6 +1,6 @@
 import 'dart:async';
 
-class TimeTTK {
+class TimeUtility {
   Stopwatch stopwatch = Stopwatch();
   Timer? timer;
   int lastTime = 0;

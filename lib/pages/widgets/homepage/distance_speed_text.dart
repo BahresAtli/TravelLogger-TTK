@@ -1,15 +1,15 @@
 import 'package:flutter/widgets.dart';
-import 'package:ttkapp/core/data/main_table.dart';
-import 'package:ttkapp/core/functionality/location/location_ttk.dart';
+import 'package:ttkapp/core/dataclass/main_table.dart';
+import 'package:ttkapp/core/utility/location_utility.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/core/data/constants.dart' as constants;
+import 'package:ttkapp/core/constants.dart' as constants;
 import 'package:ttkapp/pages/widgets/common_text.dart';
 
 class DistanceSpeedText extends StatelessWidget {
   final bool isPageStable;
   final bool isButtonPressed;
   final bool isLocationEnabled;
-  final LocationTTK locationTTK;
+  final LocationUtility utilLocation;
   final MainTable mainData;
   
 
@@ -18,7 +18,7 @@ class DistanceSpeedText extends StatelessWidget {
     required this.isPageStable,
     required this.isButtonPressed,
     required this.isLocationEnabled,
-    required this.locationTTK,
+    required this.utilLocation,
     required this.mainData,
   });
 
@@ -31,7 +31,7 @@ class DistanceSpeedText extends StatelessWidget {
     }
 
     if (isButtonPressed) {
-      double? kmh = locationTTK.currentPosition?.speed;
+      double? kmh = utilLocation.currentPosition?.speed;
       if (kmh != null) {
         kmh = kmh * 3.6;
         textField = '${mainData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        

@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../../core/data/constants.dart' as constants;
+import '../constants.dart' as constants;
 
 class DatabaseHelper {
   DatabaseHelper();

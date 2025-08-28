@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/core/data/constants.dart' as constants;
+import 'package:ttkapp/core/constants.dart' as constants;
 import 'package:ttkapp/pages/widgets/common_text.dart';
-import 'package:ttkapp/pages/widgets/distance_speed_text.dart';
-import 'package:ttkapp/pages/widgets/label_text_box.dart';
-import 'package:ttkapp/pages/widgets/location_text.dart';
+import 'package:ttkapp/pages/widgets/homepage/distance_speed_text.dart';
+import 'package:ttkapp/pages/widgets/homepage/label_text_box.dart';
+import 'package:ttkapp/pages/widgets/homepage/location_text.dart';
 import 'package:ttkapp/pages/widgets/page_data.dart';
-import 'package:ttkapp/pages/widgets/start_button.dart';
-import 'package:ttkapp/pages/widgets/time_text.dart';
+import 'package:ttkapp/pages/widgets/homepage/start_button.dart';
+import 'package:ttkapp/pages/widgets/homepage/time_text.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 
@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 75), //temporary solution for centering
             TimeText(
               isPressed: widget.pageData.isButtonPressed,
-              timeTTK: widget.pageData.timeTTK
+              utilTime: widget.pageData.utilTime
             ),
             const SizedBox(height: 10),
             StartButton(
@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
               isPageStable: widget.pageData.isPageStable,
               isButtonPressed: widget.pageData.isButtonPressed,
               isLocationEnabled: widget.pageData.isLocationEnabled,
-              locationTTK: widget.pageData.locationTTK, 
+              utilLocation: widget.pageData.utilLocation, 
               mainData: widget.pageData.mainData
             ),
             const SizedBox(height: 10),
@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
               isPageStable: widget.pageData.isPageStable,
               isButtonPressed: widget.pageData.isButtonPressed,
               isLocationEnabled: widget.pageData.isLocationEnabled,
-              locationTTK: widget.pageData.locationTTK
+              utilLocation: widget.pageData.utilLocation
             ),
             const SizedBox(height: 10),
             LabelTextBox(
@@ -103,31 +103,31 @@ class _HomePageState extends State<HomePage> {
     AppLocalizations? message = AppLocalizations.of(context);
 
     //start the operations
-    widget.pageData.timeTTK.start();
+    widget.pageData.utilTime.start();
     widget.pageData.mainData.startTime = DateTime.now();
     WakelockPlus.enable();
 
-    widget.pageData.locationTTK.startListeningLocation();
+    widget.pageData.utilLocation.startListeningLocation();
     widget.pageData.locationData.locationOrder = 0;
     widget.pageData.mainData.distance = 0.0;
     double distanceDifference = 0.0;
     late Position? previousPosition;
-    previousPosition = widget.pageData.locationTTK.currentPosition;
+    previousPosition = widget.pageData.utilLocation.currentPosition;
 
     widget.pageData.timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       setState((){});
-      if (previousPosition != null && widget.pageData.locationTTK.currentPosition != null) {
-        distanceDifference = await widget.pageData.locationTTK.calculateDistance(previousPosition, widget.pageData.locationTTK.currentPosition);
+      if (previousPosition != null && widget.pageData.utilLocation.currentPosition != null) {
+        distanceDifference = await widget.pageData.utilLocation.calculateDistance(previousPosition, widget.pageData.utilLocation.currentPosition);
         widget.pageData.mainData.distance = widget.pageData.mainData.distance! + distanceDifference;
       }
-      previousPosition = widget.pageData.locationTTK.currentPosition;
+      previousPosition = widget.pageData.utilLocation.currentPosition;
     });
 
     //wait the app to get location before it starts to save initial data on the mainTable
-    await widget.pageData.locationTTK.getPosition();
-    widget.pageData.mainData.startLatitude = widget.pageData.locationTTK.currentPosition?.latitude;
-    widget.pageData.mainData.startLongitude = widget.pageData.locationTTK.currentPosition?.longitude;
-    widget.pageData.mainData.startAltitude = widget.pageData.locationTTK.currentPosition?.altitude;
+    await widget.pageData.utilLocation.getPosition();
+    widget.pageData.mainData.startLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
+    widget.pageData.mainData.startLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
+    widget.pageData.mainData.startAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
     widget.pageData.mainData.label = message!.errorMeasure;
     Map<String, dynamic> mainRow = {
       //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
@@ -144,10 +144,10 @@ class _HomePageState extends State<HomePage> {
       widget.pageData.timerDatabase =
       Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
         widget.pageData.locationData.locationOrder++;
-        widget.pageData.locationData.latitude = widget.pageData.locationTTK.currentPosition?.latitude;
-        widget.pageData.locationData.longitude = widget.pageData.locationTTK.currentPosition?.longitude;
-        widget.pageData.locationData.altitude = widget.pageData.locationTTK.currentPosition?.altitude;
-        widget.pageData.locationData.speed = widget.pageData.locationTTK.currentPosition?.speed;
+        widget.pageData.locationData.latitude = widget.pageData.utilLocation.currentPosition?.latitude;
+        widget.pageData.locationData.longitude = widget.pageData.utilLocation.currentPosition?.longitude;
+        widget.pageData.locationData.altitude = widget.pageData.utilLocation.currentPosition?.altitude;
+        widget.pageData.locationData.speed = widget.pageData.utilLocation.currentPosition?.speed;
         widget.pageData.locationData.elapsedDistance = widget.pageData.mainData.distance;
         widget.pageData.locationData.timeAtInstance = DateTime.now();
         Map<String, dynamic> locationRow = {
@@ -168,7 +168,7 @@ class _HomePageState extends State<HomePage> {
 
   void _finishHandler() async {
     widget.pageData.mainData.endTime = DateTime.now();
-    widget.pageData.timeTTK.stop();
+    widget.pageData.utilTime.stop();
     widget.pageData.timerDatabase?.cancel();
     widget.pageData.timerState?.cancel();
     WakelockPlus.disable();
@@ -178,10 +178,10 @@ class _HomePageState extends State<HomePage> {
     double? startLatitude = widget.pageData.mainData.startLatitude;
     double? startLongitude = widget.pageData.mainData.startLongitude; 
     double? startAltitude = widget.pageData.mainData.startAltitude;
-    widget.pageData.mainData.elapsedMilisecs = widget.pageData.timeTTK.lastTime;
-    widget.pageData.mainData.endLatitude = widget.pageData.locationTTK.currentPosition?.latitude;
-    widget.pageData.mainData.endLongitude = widget.pageData.locationTTK.currentPosition?.longitude;
-    widget.pageData.mainData.endAltitude = widget.pageData.locationTTK.currentPosition?.altitude;
+    widget.pageData.mainData.elapsedMilisecs = widget.pageData.utilTime.lastTime;
+    widget.pageData.mainData.endLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
+    widget.pageData.mainData.endLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
+    widget.pageData.mainData.endAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
     //mainData.label = await _labelInputBox();
     widget.pageData.mainData.label = widget.pageData.textEditingController.text;
     widget.pageData.textEditingController.clear();
@@ -292,7 +292,7 @@ class _HomePageState extends State<HomePage> {
   Container _timeText(BuildContext context) {
     String textField = AppLocalizations.of(context)!.defaultText;
     if (widget.pageData.isButtonPressed) {
-      textField = widget.pageData.timeTTK.formatElapsedToText(null);
+      textField = widget.pageData.utilTime.formatElapsedToText(null);
     }
     return Container(
       width: 250,
@@ -341,7 +341,7 @@ class _HomePageState extends State<HomePage> {
       textField = AppLocalizations.of(context)!.appUpdated(constants.appVersion);
     }
     if (widget.pageData.isButtonPressed) {
-      double? kmh = widget.pageData.locationTTK.currentPosition?.speed;
+      double? kmh = widget.pageData.utilLocation.currentPosition?.speed;
       if (kmh != null) {
         kmh = kmh * 3.6;
         textField = '${widget.pageData.mainData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        

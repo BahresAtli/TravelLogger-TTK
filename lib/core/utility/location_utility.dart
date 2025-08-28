@@ -1,9 +1,9 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'dart:async';
-import '../../data/result_base.dart';
+import '../dataclass/base/result_base.dart';
 
-class LocationTTK {
+class LocationUtility {
 
   LocationPermission permission = LocationPermission.denied;
   Position? currentPosition;

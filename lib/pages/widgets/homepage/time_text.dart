@@ -1,16 +1,16 @@
 import 'package:flutter/widgets.dart';
-import 'package:ttkapp/core/functionality/time/time_ttk.dart';
+import 'package:ttkapp/core/utility/time_utility.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ttkapp/pages/widgets/common_text.dart';
 
 class TimeText extends StatelessWidget {
   final bool isPressed;
-  final TimeTTK timeTTK;
+  final TimeUtility utilTime;
 
   const TimeText({
       super.key,
       required this.isPressed,
-      required this.timeTTK
+      required this.utilTime
     });
 
   @override
@@ -18,7 +18,7 @@ class TimeText extends StatelessWidget {
     String textField = AppLocalizations.of(context)!.defaultText;
 
     if (isPressed) {
-      textField = timeTTK.formatElapsedToText(null);
+      textField = utilTime.formatElapsedToText(null);
     }
     
     return Container(

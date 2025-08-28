@@ -2,19 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/core/data/location_table.dart';
-import 'package:ttkapp/core/data/main_table.dart';
+import 'package:ttkapp/core/dataclass/location_table.dart';
+import 'package:ttkapp/core/dataclass/main_table.dart';
 import 'package:ttkapp/core/database/db_helper.dart';
-import 'package:ttkapp/core/functionality/location/location_ttk.dart';
-import 'package:ttkapp/core/functionality/time/time_ttk.dart';
+import 'package:ttkapp/core/utility/location_utility.dart';
+import 'package:ttkapp/core/utility/time_utility.dart';
 
 class PageData {
 
   DatabaseHelper dbHelper;
   MainTable mainData;
   LocationTable locationData;
-  LocationTTK locationTTK;
-  TimeTTK timeTTK;
+  LocationUtility utilLocation;
+  TimeUtility utilTime;
   bool isPageStable;
   bool isButtonPressed;
   bool isLocationEnabled;
@@ -28,8 +28,8 @@ class PageData {
     dbHelper = DatabaseHelper.instance,
     mainData = MainTable(),
     locationData = LocationTable(),
-    locationTTK = LocationTTK(),
-    timeTTK = TimeTTK(),
+    utilLocation = LocationUtility(),
+    utilTime = TimeUtility(),
     isPageStable = true,
     isButtonPressed = false,
     isLocationEnabled = true,

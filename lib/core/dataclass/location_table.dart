@@ -1,5 +1,5 @@
 
-import 'package:ttkapp/core/data/object_base.dart';
+import 'package:ttkapp/core/dataclass/base/object_base.dart';
 
 class LocationTable extends ObjectBase {
   late int locationRecordID;

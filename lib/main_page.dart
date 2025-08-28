@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/pages/widgets/home_page.dart';
+import 'package:ttkapp/pages/home_page.dart';
 import 'package:ttkapp/pages/widgets/initializing_page.dart';
 import 'package:ttkapp/pages/widgets/page_data.dart';
-import '../core/data/result_base.dart';
+import 'core/dataclass/base/result_base.dart';
 import 'package:geolocator/geolocator.dart';
-import '../core/data/constants.dart' as constants;
+import 'core/constants.dart' as constants;
 
 
 class MainApp extends StatefulWidget {
@@ -67,7 +67,7 @@ class _MainAppState extends State<MainApp> {
 
   Future<Result<int>> setLocationPermission() async {
 
-    Result<LocationPermission> permission = await pageData.locationTTK.locationPermission();
+    Result<LocationPermission> permission = await pageData.utilLocation.locationPermission();
 
     if(!permission.isSuccess) {
       return Result.failure(permission.error);
