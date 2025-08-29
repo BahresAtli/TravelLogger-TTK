@@ -7,6 +7,7 @@ class LocationText extends StatelessWidget{
   final bool isPageStable;
   final bool isButtonPressed;
   final bool isLocationEnabled;
+  final bool isStartConfigDone;
   final LocationUtility utilLocation;
 
   const LocationText({
@@ -14,6 +15,7 @@ class LocationText extends StatelessWidget{
     required this.isPageStable,
     required this.isButtonPressed,
     required this.isLocationEnabled,
+    required this.isStartConfigDone,
     required this.utilLocation
   });
 
@@ -26,9 +28,8 @@ class LocationText extends StatelessWidget{
     }
 
     if (isButtonPressed) {
-      double? kmh = utilLocation.currentPosition?.speed;
-      if (kmh != null) {
-        textField = utilLocation.convertPositionToString(AppLocalizations.of(context));
+      if (isStartConfigDone) {
+        textField = utilLocation.convertPositionToString(AppLocalizations.of(context), isLocationEnabled);
       } else if (isLocationEnabled) {
         textField = AppLocalizations.of(context)!.waitAvailableLocation;
       } else {

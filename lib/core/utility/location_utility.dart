@@ -8,14 +8,12 @@ import '../dataclass/base/result_base.dart';
 
 class LocationUtility {
 
-  final DatabaseHelper dbHelper = DatabaseHelper.instance;
-  LocationPermission permission = LocationPermission.denied;
-  Position? currentPosition;
-  StreamSubscription? subscription;
-  bool isLocationEnabled = false;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  Position? _currentPosition;
+  StreamSubscription<Position>? _positionStreamSubscription;
 
   Future<Result<List<LocationData>>> selectLocation() async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     List<Map<String, dynamic>> queryResult;
     List<LocationData> locationList = List<LocationData>.empty(growable: true);
 
@@ -63,7 +61,7 @@ class LocationUtility {
   }
 
   Future<Result<List<LocationData>>> selectLocationByProps(LocationData locationData) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
 
     List<Map<String, dynamic>> queryResult;
     List<LocationData> locationList = List<LocationData>.empty(growable: true);
@@ -138,7 +136,7 @@ class LocationUtility {
   }
 
   Future<Result<LocationData>> selectLocationByID(int locationRecordID) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
 
     List<Map<String, dynamic>> queryResult;
     LocationData locationData = LocationData();
@@ -185,7 +183,7 @@ class LocationUtility {
   }
 
   Future<Result<int>> insertLocation(LocationData locationData) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     int locationRecordID;
 
     Map<String, dynamic> row = {
@@ -210,7 +208,7 @@ class LocationUtility {
   }
 
   Future<Result<int>> updateLocation(LocationData locationData) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     int count;
 
     Map<String, dynamic> row = {
@@ -241,10 +239,11 @@ class LocationUtility {
 
   Future<Result<LocationPermission>> locationPermission() async {
 
-    bool serviceEnabled;
+    LocationPermission permission = LocationPermission.denied;
+    bool isServiceEnabled;
     
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
+    isServiceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!isServiceEnabled) {
       return Result.success(LocationPermission.denied);
     }
 
@@ -258,35 +257,41 @@ class LocationUtility {
       permission = await Geolocator.requestPermission();
     }
 
-    isLocationEnabled = permission == LocationPermission.always || permission == LocationPermission.whileInUse;
-
     return Result.success(permission);
   }
 
-  void startListeningLocation() {
+  void startListeningLocation(bool isLocationEnabled) async {
+
     if(isLocationEnabled) {
-      subscription = Geolocator.getPositionStream(
+      _positionStreamSubscription = Geolocator.getPositionStream(
         locationSettings: AndroidSettings(
           accuracy: LocationAccuracy.best,
           distanceFilter: 1,
           intervalDuration: const Duration(seconds:1),
         )
       ).listen((event) async {
-        currentPosition = event;
+        _currentPosition = event;
       });
-
     } else {
       return;
     }
 
   }
 
-  Future<Position?> getPosition() async {
+  void stopListeningLocation() {
+    _positionStreamSubscription?.cancel();
+  }
+
+  Future<Position?> getInitialPosition(bool isLocationEnabled) async {
     if (isLocationEnabled) {
-        currentPosition = await Geolocator.getCurrentPosition();
+      _currentPosition = await Geolocator.getCurrentPosition();
       return await Geolocator.getCurrentPosition();
     }
     return null;
+  }
+
+  Position? getPosition() {
+    return _currentPosition;
   }
 
   Future<double> calculateDistance(Position? prev, Position? curr) async { 
@@ -302,25 +307,17 @@ class LocationUtility {
     return distance;
   }
 
-  String convertPositionToString(AppLocalizations? message) {
+  String convertPositionToString(AppLocalizations? message, bool isLocationEnabled) {
 
     if (!isLocationEnabled) {
       return message!.locationDisabled;
     }
 
-    if (currentPosition == null) {
+    if (_currentPosition == null) {
       return message!.waitAvailableLocation;
     }
 
-    return '${currentPosition?.latitude.toStringAsFixed(7)}, ${currentPosition?.longitude.toStringAsFixed(7)}, ${currentPosition?.altitude.toStringAsFixed(2)}';
-  }
-
-  //deprecated
-  void changeLocation(bool run) async {
-    Timer.periodic(const Duration(seconds: 1), (Timer t) async {
-      await getPosition();
-    });
-
+    return '${_currentPosition?.latitude.toStringAsFixed(7)}, ${_currentPosition?.longitude.toStringAsFixed(7)}, ${_currentPosition?.altitude.toStringAsFixed(2)}';
   }
 
 }

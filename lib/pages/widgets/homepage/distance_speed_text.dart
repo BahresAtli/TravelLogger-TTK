@@ -31,13 +31,13 @@ class DistanceSpeedText extends StatelessWidget {
     }
 
     if (isButtonPressed) {
-      double? kmh = utilLocation.currentPosition?.speed;
-      if (kmh != null) {
-        kmh = kmh * 3.6;
-        textField = '${recordData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
-      } else if (isLocationEnabled) {
-        textField = AppLocalizations.of(context)!.waitAvailableLocation;
-      } else {
+      double? kmh = utilLocation.getPosition()?.speed;
+      double? m = recordData.distance;
+      if (kmh != null) {kmh = kmh * 3.6;}
+      else {kmh = 0.0; m = 0.0;}
+
+      textField = '${m?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}'; 
+      if (!isLocationEnabled) {
         textField = AppLocalizations.of(context)!.locationDisabled;
       }
     }

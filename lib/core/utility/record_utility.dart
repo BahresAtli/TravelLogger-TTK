@@ -5,12 +5,12 @@ import 'package:ttkapp/core/dataclass/record_data.dart';
 
 class RecordUtility {
 
-  final DatabaseHelper dbHelper = DatabaseHelper.instance;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   RecordUtility();
 
   Future<Result<List<RecordData>>> selectRecord() async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     List<Map<String, dynamic>> queryResult;
     List<RecordData> recordList = List<RecordData>.empty(growable: true);
 
@@ -64,7 +64,7 @@ class RecordUtility {
   }
 
   Future<Result<List<RecordData>>> selectRecordByProps(RecordData recordData) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
 
     List<Map<String, dynamic>> queryResult;
     List<RecordData> recordList = List<RecordData>.empty(growable: true);
@@ -147,7 +147,7 @@ class RecordUtility {
   }
 
   Future<Result<RecordData>> selectRecordByID(int recordID) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
 
     List<Map<String, dynamic>> queryResult;
     RecordData recordData = RecordData();
@@ -200,7 +200,7 @@ class RecordUtility {
   }
 
   Future<Result<int>> insertRecord(RecordData recordData) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     int recordID;
 
     Map<String, dynamic> row = {
@@ -228,7 +228,7 @@ class RecordUtility {
   }
 
   Future<Result<int>> updateRecord(RecordData recordData) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     int count;
 
     Map<String, dynamic> row = {

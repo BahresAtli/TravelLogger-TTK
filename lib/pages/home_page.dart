@@ -73,6 +73,7 @@ class _HomePageState extends State<HomePage> {
               isPageStable: widget.pageData.isPageStable,
               isButtonPressed: widget.pageData.isButtonPressed,
               isLocationEnabled: widget.pageData.isLocationEnabled,
+              isStartConfigDone: widget.pageData.isStartConfigDone,
               utilLocation: widget.pageData.utilLocation
             ),
             const SizedBox(height: 10),
@@ -83,13 +84,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          //_testingFunction();
-        },
-        backgroundColor: Colors.red,
-        child: const Icon(Icons.list),
-      ),
     );
   }
 
@@ -97,7 +91,6 @@ class _HomePageState extends State<HomePage> {
     setState((){});
     if(widget.pageData.isPageStable) {
       if (widget.pageData.isButtonPressed == false) {
-        widget.pageData.initialSetState?.cancel();
         _pressHandler(context);
       } else {
         _finishHandler();
@@ -111,38 +104,43 @@ class _HomePageState extends State<HomePage> {
     AppLocalizations? message = AppLocalizations.of(context);
 
     //start the operations
+
     widget.pageData.utilTime.start();
     widget.pageData.recordData.startTime = DateTime.now();
+    await widget.pageData.utilLocation.getInitialPosition(widget.pageData.isLocationEnabled);
+    widget.pageData.utilLocation.startListeningLocation(widget.pageData.isLocationEnabled);
     WakelockPlus.enable();
 
-    widget.pageData.utilLocation.startListeningLocation();
+    //reset the data
     widget.pageData.locationData.locationOrder = 0;
     widget.pageData.recordData.distance = 0.0;
+
+    //distance calculation setup
     double distanceDifference = 0.0;
-    late Position? previousPosition;
-    previousPosition = widget.pageData.utilLocation.currentPosition;
+    Position? previousPosition = widget.pageData.utilLocation.getPosition();
 
     widget.pageData.timerState = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
-      setState((){});
-      if (previousPosition != null && widget.pageData.utilLocation.currentPosition != null) {
-        distanceDifference = await widget.pageData.utilLocation.calculateDistance(previousPosition, widget.pageData.utilLocation.currentPosition);
+      setState(() {});
+      if (previousPosition != null && widget.pageData.utilLocation.getPosition() != null) {
+        distanceDifference = await widget.pageData.utilLocation.calculateDistance(previousPosition, widget.pageData.utilLocation.getPosition());
         widget.pageData.recordData.distance = widget.pageData.recordData.distance! + distanceDifference;
       }
-      previousPosition = widget.pageData.utilLocation.currentPosition;
+      previousPosition = widget.pageData.utilLocation.getPosition();
     });
 
+    widget.pageData.isStartConfigDone = true;
+
+
     //wait the app to get location before it starts to save initial data on the mainTable
-    await widget.pageData.utilLocation.getPosition();
-    widget.pageData.recordData.startLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
-    widget.pageData.recordData.startLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
-    widget.pageData.recordData.startAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
+    widget.pageData.recordData.startLatitude = widget.pageData.utilLocation.getPosition()?.latitude;
+    widget.pageData.recordData.startLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
+    widget.pageData.recordData.startAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
     widget.pageData.recordData.label = message!.errorMeasure;
 
     Result<int> insertRecordResult = await widget.pageData.utilRecord.insertRecord(widget.pageData.recordData);
     if (!insertRecordResult.isSuccess) {
       //show error
       print("Error while inserting record: ${insertRecordResult.error}");
-      return;
     }
 
     widget.pageData.recordData.recordID = insertRecordResult.data!;
@@ -153,10 +151,10 @@ class _HomePageState extends State<HomePage> {
       widget.pageData.timerDatabase =
       Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
         widget.pageData.locationData.locationOrder = widget.pageData.locationData.locationOrder! + 1;
-        widget.pageData.locationData.latitude = widget.pageData.utilLocation.currentPosition?.latitude;
-        widget.pageData.locationData.longitude = widget.pageData.utilLocation.currentPosition?.longitude;
-        widget.pageData.locationData.altitude = widget.pageData.utilLocation.currentPosition?.altitude;
-        widget.pageData.locationData.speed = widget.pageData.utilLocation.currentPosition?.speed;
+        widget.pageData.locationData.latitude = widget.pageData.utilLocation.getPosition()?.latitude;
+        widget.pageData.locationData.longitude = widget.pageData.utilLocation.getPosition()?.longitude;
+        widget.pageData.locationData.altitude = widget.pageData.utilLocation.getPosition()?.altitude;
+        widget.pageData.locationData.speed = widget.pageData.utilLocation.getPosition()?.speed;
         widget.pageData.locationData.elapsedDistance = widget.pageData.recordData.distance;
         widget.pageData.locationData.timeAtInstance = DateTime.now();
 
@@ -164,7 +162,6 @@ class _HomePageState extends State<HomePage> {
         if (!insertLocationResult.isSuccess) {
           //show error
           print("Error while inserting location: ${insertLocationResult.error}");
-          return;
         }
 
         widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
@@ -177,15 +174,20 @@ class _HomePageState extends State<HomePage> {
     RecordData recordData = RecordData();
 
     widget.pageData.recordData.endTime = DateTime.now();
-    widget.pageData.utilTime.stop();
+
+    //stop the operations
+    widget.pageData.recordData.elapsedMilisecs = widget.pageData.utilTime.stop();
     widget.pageData.timerDatabase?.cancel();
     widget.pageData.timerState?.cancel();
+    widget.pageData.utilLocation.stopListeningLocation();
+
     WakelockPlus.disable();
+
+
     //this is for the new session settings, new session overwrites these values and cause to program to update the old row with new session variables.
-    widget.pageData.recordData.elapsedMilisecs = widget.pageData.utilTime.lastTime;
-    widget.pageData.recordData.endLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
-    widget.pageData.recordData.endLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
-    widget.pageData.recordData.endAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
+    widget.pageData.recordData.endLatitude = widget.pageData.utilLocation.getPosition()?.latitude;
+    widget.pageData.recordData.endLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
+    widget.pageData.recordData.endAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
     widget.pageData.recordData.label = widget.pageData.textEditingController.text;
 
     recordData = widget.pageData.recordData;
@@ -201,9 +203,8 @@ class _HomePageState extends State<HomePage> {
     if (!updateRecordResult.isSuccess) {
       //show error
       print("Error while updating record: ${updateRecordResult.error}");
-      return;
     }
-
+    widget.pageData.isStartConfigDone = false;
     widget.pageData.recordData.distance = 0.0;
   }
 
@@ -325,7 +326,6 @@ class _HomePageState extends State<HomePage> {
           setState((){});
             if(widget.pageData.isPageStable) {
               if (widget.pageData.isButtonPressed == false) {
-                widget.pageData.initialSetState?.cancel();
                 _pressHandler(context);
               } else {
                 _finishHandler();
@@ -357,7 +357,7 @@ class _HomePageState extends State<HomePage> {
       textField = AppLocalizations.of(context)!.appUpdated(constants.appVersion);
     }
     if (widget.pageData.isButtonPressed) {
-      double? kmh = widget.pageData.utilLocation.currentPosition?.speed;
+      double? kmh = widget.pageData.utilLocation.getPosition()?.speed;
       if (kmh != null) {
         kmh = kmh * 3.6;
         textField = '${widget.pageData.recordData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
