@@ -2,17 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/core/dataclass/location_table.dart';
-import 'package:ttkapp/core/dataclass/main_table.dart';
+import 'package:ttkapp/core/dataclass/location_data.dart';
+import 'package:ttkapp/core/dataclass/record_data.dart';
 import 'package:ttkapp/core/database/db_helper.dart';
 import 'package:ttkapp/core/utility/location_utility.dart';
+import 'package:ttkapp/core/utility/record_utility.dart';
 import 'package:ttkapp/core/utility/time_utility.dart';
 
 class PageData {
 
   DatabaseHelper dbHelper;
-  MainTable mainData;
-  LocationTable locationData;
+  RecordData recordData;
+  RecordUtility utilRecord;
+  LocationData locationData;
   LocationUtility utilLocation;
   TimeUtility utilTime;
   bool isPageStable;
@@ -26,8 +28,9 @@ class PageData {
 
   PageData() : 
     dbHelper = DatabaseHelper.instance,
-    mainData = MainTable(),
-    locationData = LocationTable(),
+    recordData = RecordData(),
+    utilRecord = RecordUtility(),
+    locationData = LocationData(),
     utilLocation = LocationUtility(),
     utilTime = TimeUtility(),
     isPageStable = true,

@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/core/constants.dart' as constants;
+import 'package:ttkapp/core/dataclass/base/result_base.dart';
+import 'package:ttkapp/core/dataclass/record_data.dart';
 import 'package:ttkapp/pages/widgets/common_text.dart';
 import 'package:ttkapp/pages/widgets/homepage/distance_speed_text.dart';
 import 'package:ttkapp/pages/widgets/homepage/label_text_box.dart';
@@ -65,7 +66,7 @@ class _HomePageState extends State<HomePage> {
               isButtonPressed: widget.pageData.isButtonPressed,
               isLocationEnabled: widget.pageData.isLocationEnabled,
               utilLocation: widget.pageData.utilLocation, 
-              mainData: widget.pageData.mainData
+              recordData: widget.pageData.recordData
             ),
             const SizedBox(height: 10),
             LocationText(
@@ -81,6 +82,13 @@ class _HomePageState extends State<HomePage> {
             )
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //_testingFunction();
+        },
+        backgroundColor: Colors.red,
+        child: const Icon(Icons.list),
       ),
     );
   }
@@ -104,12 +112,12 @@ class _HomePageState extends State<HomePage> {
 
     //start the operations
     widget.pageData.utilTime.start();
-    widget.pageData.mainData.startTime = DateTime.now();
+    widget.pageData.recordData.startTime = DateTime.now();
     WakelockPlus.enable();
 
     widget.pageData.utilLocation.startListeningLocation();
     widget.pageData.locationData.locationOrder = 0;
-    widget.pageData.mainData.distance = 0.0;
+    widget.pageData.recordData.distance = 0.0;
     double distanceDifference = 0.0;
     late Position? previousPosition;
     previousPosition = widget.pageData.utilLocation.currentPosition;
@@ -118,89 +126,85 @@ class _HomePageState extends State<HomePage> {
       setState((){});
       if (previousPosition != null && widget.pageData.utilLocation.currentPosition != null) {
         distanceDifference = await widget.pageData.utilLocation.calculateDistance(previousPosition, widget.pageData.utilLocation.currentPosition);
-        widget.pageData.mainData.distance = widget.pageData.mainData.distance! + distanceDifference;
+        widget.pageData.recordData.distance = widget.pageData.recordData.distance! + distanceDifference;
       }
       previousPosition = widget.pageData.utilLocation.currentPosition;
     });
 
     //wait the app to get location before it starts to save initial data on the mainTable
     await widget.pageData.utilLocation.getPosition();
-    widget.pageData.mainData.startLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
-    widget.pageData.mainData.startLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
-    widget.pageData.mainData.startAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
-    widget.pageData.mainData.label = message!.errorMeasure;
-    Map<String, dynamic> mainRow = {
-      //even though app crashes in the middle of a measurement, there is properly connecting ID for location data, since an instance is created at the beginning.
-      'startTime': widget.pageData.mainData.startTime.toString(),
-      'startLatitude': widget.pageData.mainData.startLatitude,
-      'startLongitude': widget.pageData.mainData.startLongitude,
-      'startAltitude': widget.pageData.mainData.startAltitude,
-      'label': widget.pageData.mainData.label,
-    };
-    widget.pageData.mainData.recordID = await widget.pageData.dbHelper.insert(mainRow, constants.mainTable);
-    widget.pageData.locationData.recordID = widget.pageData.mainData.recordID; 
+    widget.pageData.recordData.startLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
+    widget.pageData.recordData.startLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
+    widget.pageData.recordData.startAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
+    widget.pageData.recordData.label = message!.errorMeasure;
+
+    Result<int> insertRecordResult = await widget.pageData.utilRecord.insertRecord(widget.pageData.recordData);
+    if (!insertRecordResult.isSuccess) {
+      //show error
+      print("Error while inserting record: ${insertRecordResult.error}");
+      return;
+    }
+
+    widget.pageData.recordData.recordID = insertRecordResult.data!;
+
+    widget.pageData.locationData.recordID = widget.pageData.recordData.recordID; 
 
     if(widget.pageData.isLocationEnabled) {
       widget.pageData.timerDatabase =
       Timer.periodic(const Duration(seconds: 1), (Timer t) async { //changed to every sec for debugging
-        widget.pageData.locationData.locationOrder++;
+        widget.pageData.locationData.locationOrder = widget.pageData.locationData.locationOrder! + 1;
         widget.pageData.locationData.latitude = widget.pageData.utilLocation.currentPosition?.latitude;
         widget.pageData.locationData.longitude = widget.pageData.utilLocation.currentPosition?.longitude;
         widget.pageData.locationData.altitude = widget.pageData.utilLocation.currentPosition?.altitude;
         widget.pageData.locationData.speed = widget.pageData.utilLocation.currentPosition?.speed;
-        widget.pageData.locationData.elapsedDistance = widget.pageData.mainData.distance;
+        widget.pageData.locationData.elapsedDistance = widget.pageData.recordData.distance;
         widget.pageData.locationData.timeAtInstance = DateTime.now();
-        Map<String, dynamic> locationRow = {
-          'recordID': widget.pageData.locationData.recordID,
-          'locationOrder': widget.pageData.locationData.locationOrder,
-          'latitude': widget.pageData.locationData.latitude,
-          'longitude': widget.pageData.locationData.longitude,
-          'altitude' : widget.pageData.locationData.altitude,
-          'speed': widget.pageData.locationData.speed,
-          'elapsedDistance': widget.pageData.locationData.elapsedDistance,
-          'timeAtInstance': widget.pageData.locationData.timeAtInstance.toString(),
-        };
-        widget.pageData.locationData.locationRecordID = await widget.pageData.dbHelper.insert(locationRow, 'location');
+
+        Result<int> insertLocationResult = await widget.pageData.utilLocation.insertLocation(widget.pageData.locationData);
+        if (!insertLocationResult.isSuccess) {
+          //show error
+          print("Error while inserting location: ${insertLocationResult.error}");
+          return;
+        }
+
+        widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
       });
     }
 
   }
 
   void _finishHandler() async {
-    widget.pageData.mainData.endTime = DateTime.now();
+    RecordData recordData = RecordData();
+
+    widget.pageData.recordData.endTime = DateTime.now();
     widget.pageData.utilTime.stop();
     widget.pageData.timerDatabase?.cancel();
     widget.pageData.timerState?.cancel();
     WakelockPlus.disable();
     //this is for the new session settings, new session overwrites these values and cause to program to update the old row with new session variables.
-    int? recordID = widget.pageData.mainData.recordID;
-    DateTime? startTime = widget.pageData.mainData.startTime;
-    double? startLatitude = widget.pageData.mainData.startLatitude;
-    double? startLongitude = widget.pageData.mainData.startLongitude; 
-    double? startAltitude = widget.pageData.mainData.startAltitude;
-    widget.pageData.mainData.elapsedMilisecs = widget.pageData.utilTime.lastTime;
-    widget.pageData.mainData.endLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
-    widget.pageData.mainData.endLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
-    widget.pageData.mainData.endAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
-    //mainData.label = await _labelInputBox();
-    widget.pageData.mainData.label = widget.pageData.textEditingController.text;
+    widget.pageData.recordData.elapsedMilisecs = widget.pageData.utilTime.lastTime;
+    widget.pageData.recordData.endLatitude = widget.pageData.utilLocation.currentPosition?.latitude;
+    widget.pageData.recordData.endLongitude = widget.pageData.utilLocation.currentPosition?.longitude;
+    widget.pageData.recordData.endAltitude = widget.pageData.utilLocation.currentPosition?.altitude;
+    widget.pageData.recordData.label = widget.pageData.textEditingController.text;
+
+    recordData = widget.pageData.recordData;
+    recordData.recordID = widget.pageData.recordData.recordID;
+    recordData.startTime = widget.pageData.recordData.startTime;
+    recordData.startLatitude = widget.pageData.recordData.startLatitude;
+    recordData.startLongitude = widget.pageData.recordData.startLongitude; 
+    recordData.startAltitude = widget.pageData.recordData.startAltitude;
     widget.pageData.textEditingController.clear();
-    Map<String, dynamic> row = {
-      'recordID': recordID,
-      'startTime': startTime.toString(),
-      'endTime': widget.pageData.mainData.endTime.toString(),
-      'elapsedMilisecs': widget.pageData.mainData.elapsedMilisecs,
-      'distance': widget.pageData.mainData.distance,
-      'startLatitude': startLatitude,
-      'startLongitude': startLongitude,
-      'startAltitude': startAltitude,
-      'endLatitude': widget.pageData.mainData.endLatitude,
-      'endLongitude': widget.pageData.mainData.endLongitude,
-      'endAltitude': widget.pageData.mainData.endAltitude,
-      'label': widget.pageData.mainData.label
-    };
-    await widget.pageData.dbHelper.update(row, constants.mainTable, "recordID");
-    widget.pageData.mainData.distance = 0.0;
+
+    Result<int> updateRecordResult = await widget.pageData.utilRecord.updateRecord(recordData);
+    
+    if (!updateRecordResult.isSuccess) {
+      //show error
+      print("Error while updating record: ${updateRecordResult.error}");
+      return;
+    }
+
+    widget.pageData.recordData.distance = 0.0;
   }
 
 
@@ -232,6 +236,18 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  /*
+  void _testingFunction() async {
+    RecordData recordData = RecordData();
+    recordData.label = "jrume";
+    Result queryResult = await widget.pageData.utilRecord.selectRecordByProps(recordData);
+    if (!queryResult.isSuccess) {
+      print("Error: ${queryResult.error}");
+      return;
+    }
+  }
+  */
 
   //Deprecated zone
 
@@ -344,7 +360,7 @@ class _HomePageState extends State<HomePage> {
       double? kmh = widget.pageData.utilLocation.currentPosition?.speed;
       if (kmh != null) {
         kmh = kmh * 3.6;
-        textField = '${widget.pageData.mainData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
+        textField = '${widget.pageData.recordData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
       } else if (widget.pageData.isLocationEnabled) {
         textField = AppLocalizations.of(context)!.waitAvailableLocation;
       } else {

@@ -1,6 +1,6 @@
 import 'package:ttkapp/core/dataclass/base/object_base.dart';
 
-class MainTable extends ObjectBase {
+class RecordData extends ObjectBase {
   late int recordID;
   late DateTime? startTime;
   late DateTime? endTime;
@@ -15,10 +15,20 @@ class MainTable extends ObjectBase {
   late String? label;
   late TravelType? travelType;
 
-  MainTable() {
+  RecordData() {
     recordID = 0;
-    distance = 0.0;
-    travelType = TravelType.other;
+    startTime = null;
+    endTime = null;
+    elapsedMilisecs = null;
+    distance = null;
+    startLatitude = null;
+    startLongitude = null;
+    startAltitude = null;
+    endLatitude = null;
+    endLongitude = null;
+    endAltitude = null;
+    label = null;
+    travelType = null;
   }
 
 }

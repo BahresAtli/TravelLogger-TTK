@@ -1,8 +1,5 @@
-import 'dart:async';
-
 class TimeUtility {
   Stopwatch stopwatch = Stopwatch();
-  Timer? timer;
   int lastTime = 0;
 
   void start() {
@@ -15,13 +12,13 @@ class TimeUtility {
     stopwatch.reset();
   }
 
-  Duration getElapsedAsDuration(int? milliSeconds) {
+  Duration _getElapsedAsDuration(int? milliSeconds) {
     if (milliSeconds != null) return Duration(milliseconds: milliSeconds);
     return Duration(milliseconds: stopwatch.elapsedMilliseconds);
   }
 
   String formatElapsedToText(int? milliseconds) {
-    Duration currentTime = getElapsedAsDuration(milliseconds);
+    Duration currentTime = _getElapsedAsDuration(milliseconds);
 
     String padding(int n) => n.toString().padLeft(2, "0");
 

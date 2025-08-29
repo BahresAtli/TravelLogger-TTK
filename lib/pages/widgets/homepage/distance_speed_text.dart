@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:ttkapp/core/dataclass/main_table.dart';
+import 'package:ttkapp/core/dataclass/record_data.dart';
 import 'package:ttkapp/core/utility/location_utility.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ttkapp/core/constants.dart' as constants;
@@ -10,7 +10,7 @@ class DistanceSpeedText extends StatelessWidget {
   final bool isButtonPressed;
   final bool isLocationEnabled;
   final LocationUtility utilLocation;
-  final MainTable mainData;
+  final RecordData recordData;
   
 
   const DistanceSpeedText({
@@ -19,7 +19,7 @@ class DistanceSpeedText extends StatelessWidget {
     required this.isButtonPressed,
     required this.isLocationEnabled,
     required this.utilLocation,
-    required this.mainData,
+    required this.recordData,
   });
 
   @override
@@ -34,7 +34,7 @@ class DistanceSpeedText extends StatelessWidget {
       double? kmh = utilLocation.currentPosition?.speed;
       if (kmh != null) {
         kmh = kmh * 3.6;
-        textField = '${mainData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
+        textField = '${recordData.distance?.toStringAsFixed(2)} ${AppLocalizations.of(context)!.meter}, ${kmh.toStringAsFixed(2)} ${AppLocalizations.of(context)!.kmHour}';        
       } else if (isLocationEnabled) {
         textField = AppLocalizations.of(context)!.waitAvailableLocation;
       } else {
