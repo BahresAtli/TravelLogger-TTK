@@ -1,0 +1,68 @@
+
+{
+  "@@locale": "en",
+
+  "helloWorld": "Hello World!",
+  "@helloWorld": {},
+
+  "start": "Start",
+  "@start": {},
+
+  "finish": "Finish",
+  "@finish": {},
+
+  "pleaseWait": "Please Wait",
+  "@pleaseWait": {},
+
+  "ok": "OK",
+  "@ok": {},
+
+  "attention": "Attention",
+  "@attention": {},
+
+  "locationDenyDescription": "TTK App requires location permission to calculate your speed, distance and the location map. You will not get the full experience of the TTK App without enabling location permission. You can change your location preferences on the device settings later.",
+  "@locationDenyDescription": {},
+
+  "defaultText": "-",
+  "@defaultText": {},
+
+  "seeDistanceSpeed": "Press Start to see distance and speed.",
+  "@seeDistanceSpeed": {},
+
+  "seeLocation": "Press Start to see location.",
+  "@seeLocation": {},
+
+  "appUpdated": "TTK App is updated to ${appVersion}.",
+  "@appUpdated": {
+    "placeholders": {
+      "appVersion": {}
+    }
+  },
+
+  "waitDbAdjust": "Please wait for database to adjust itself.",
+  "@waitDbAdjust": {},
+
+  "locationDisabled": "Location permission is disabled.",
+  "@locationDisabled": {},
+
+  "waitAvailableLocation": "Waiting for the location to be available...",
+  "@waitAvailableLocation": {},
+
+  "meter": "m",
+  "@meter": {},
+
+  "kmHour": "km/h",
+  "@kmHour": {},
+
+  "enterLabel": "Enter the label",
+  "@enterLabel": {},
+
+  "unableDetermineLocation": "Unable to determine location status.",
+  "@unableDetermineLocation": {},
+
+  "errorMeasure": "Error: App crashed/Connection lost while measuring",
+  "@errorMeasure": {},
+
+  "appInitializing": "App is initializing. Please wait.",
+  "@appInitializing": {}
+}

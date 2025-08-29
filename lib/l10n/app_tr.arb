@@ -1,0 +1,67 @@
+{
+  "@@locale": "tr",
+
+  "helloWorld": "Merhaba Dünya!",
+  "@helloWorld": {},
+
+  "start": "Başlat",
+  "@start": {},
+
+  "finish": "Durdur",
+  "@finish": {},
+
+  "pleaseWait": "Lütfen Bekleyin",
+  "@pleaseWait": {},
+
+  "ok": "Tamam",
+  "@ok": {},
+
+  "attention": "Dikkat",
+  "@attention": {},
+
+  "locationDenyDescription": "TTK App hız, mesafe ve konum haritası gibi bilgileri kaydetmek için konum iznine ihtiyaç duyar. Konum izni olmadan TTK App'ın bütün özelliklerini kullanamayacaksınız. Daha sonra cihaz ayarlarından konum tercihinizi değiştirebilirsiniz.",
+  "@locationDenyDescription": {},
+
+  "defaultText": "-",
+  "@defaultText": {},
+
+  "seeDistanceSpeed": "Hız ve mesafeyi görmek için Başlat'a basın.",
+  "@seeDistanceSpeed": {},
+
+  "seeLocation": "Konumu görmek için Başlat'a basın.",
+  "@seeLocation": {},
+
+  "appUpdated": "TTK App ${appVersion} sürümüne yükseltildi.",
+  "@appUpdated": {
+    "placeholders": {
+      "appVersion": {}
+    }
+  },
+
+  "waitDbAdjust": "Lütfen veri tabanının hazırlanmasını bekleyin.",
+  "@waitDbAdjust": {},
+
+  "locationDisabled": "Konum izni devre dışı.",
+  "@locationDisabled": {},
+
+  "waitAvailableLocation": "Konumun müsait olması bekleniyor...",
+  "@waitAvailableLocation": {},
+
+  "meter": "m",
+  "@meter": {},
+
+  "kmHour": "km/sa",
+  "@kmHour": {},
+
+  "enterLabel": "Etiket giriniz",
+  "@enterLabel": {},
+
+  "unableDetermineLocation": "Konum izni durumu belirlenemedi.",
+  "@unableDetermineLocation": {},
+
+  "errorMeasure": "Hata: Ölçüm sırasında uygulama çöktü/bağlantı kesildi",
+  "@errorMeasure": {},
+
+  "appInitializing": "Uygulama başlatılmaya hazırlanıyor. Lütfen bekleyin.",
+  "@appInitializing": {}
+}
