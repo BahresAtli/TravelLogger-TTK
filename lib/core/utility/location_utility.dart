@@ -260,7 +260,7 @@ class LocationUtility {
     return Result.success(permission);
   }
 
-  void startListeningLocation(bool isLocationEnabled) async {
+  void startListeningLocation(bool isLocationEnabled) {
 
     if(isLocationEnabled) {
       _positionStreamSubscription = Geolocator.getPositionStream(
@@ -280,13 +280,19 @@ class LocationUtility {
 
   void stopListeningLocation() {
     _positionStreamSubscription?.cancel();
+    _currentPosition = null;
   }
 
   Future<Position?> getInitialPosition(bool isLocationEnabled) async {
-    if (isLocationEnabled) {
-      _currentPosition = await Geolocator.getCurrentPosition();
-      return await Geolocator.getCurrentPosition();
+    if(_currentPosition != null) {
+      return _currentPosition;
     }
+
+    if (isLocationEnabled) {
+      _currentPosition = await Geolocator.getLastKnownPosition();
+      return _currentPosition;
+    }
+
     return null;
   }
 

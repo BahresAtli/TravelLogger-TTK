@@ -42,6 +42,9 @@ class DistanceSpeedText extends StatelessWidget {
       }
     }
     
-    return CommonText(text: textField, fontSize: 20);
+    return Container(
+      margin: const EdgeInsets.only(left: 20, right: 20),
+      child: CommonText(text: textField, fontSize: 17)
+      );
   }
 }

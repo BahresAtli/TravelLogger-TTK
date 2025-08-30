@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 75), //temporary solution for centering
+            const SizedBox(height: 40), //temporary solution for centering
             TimeText(
               isPressed: widget.pageData.isButtonPressed,
               utilTime: widget.pageData.utilTime
@@ -107,7 +107,6 @@ class _HomePageState extends State<HomePage> {
 
     widget.pageData.utilTime.start();
     widget.pageData.recordData.startTime = DateTime.now();
-    await widget.pageData.utilLocation.getInitialPosition(widget.pageData.isLocationEnabled);
     widget.pageData.utilLocation.startListeningLocation(widget.pageData.isLocationEnabled);
     WakelockPlus.enable();
 
@@ -179,7 +178,6 @@ class _HomePageState extends State<HomePage> {
     widget.pageData.recordData.elapsedMilisecs = widget.pageData.utilTime.stop();
     widget.pageData.timerDatabase?.cancel();
     widget.pageData.timerState?.cancel();
-    widget.pageData.utilLocation.stopListeningLocation();
 
     WakelockPlus.disable();
 
@@ -189,6 +187,7 @@ class _HomePageState extends State<HomePage> {
     widget.pageData.recordData.endLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
     widget.pageData.recordData.endAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
     widget.pageData.recordData.label = widget.pageData.textEditingController.text;
+    widget.pageData.utilLocation.stopListeningLocation();
 
     recordData = widget.pageData.recordData;
     recordData.recordID = widget.pageData.recordData.recordID;
