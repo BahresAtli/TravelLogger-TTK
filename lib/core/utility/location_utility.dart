@@ -268,6 +268,11 @@ class LocationUtility {
           accuracy: LocationAccuracy.best,
           distanceFilter: 1,
           intervalDuration: const Duration(seconds:1),
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationTitle: 'ttkApp', 
+            notificationText: 'ttkapp is getting the Location',
+            enableWakeLock: true,
+          )
         )
       ).listen((event) async {
         _currentPosition = event;
@@ -289,8 +294,8 @@ class LocationUtility {
     }
 
     if (isLocationEnabled) {
-      _currentPosition = await Geolocator.getLastKnownPosition();
-      return _currentPosition;
+      _currentPosition = await Geolocator.getCurrentPosition();
+      return await Geolocator.getCurrentPosition();
     }
 
     return null;

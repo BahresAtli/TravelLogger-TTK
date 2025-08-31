@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 40), //temporary solution for centering
+            const SizedBox(height: 75), //temporary solution for centering
             TimeText(
               isPressed: widget.pageData.isButtonPressed,
               utilTime: widget.pageData.utilTime
@@ -73,7 +73,6 @@ class _HomePageState extends State<HomePage> {
               isPageStable: widget.pageData.isPageStable,
               isButtonPressed: widget.pageData.isButtonPressed,
               isLocationEnabled: widget.pageData.isLocationEnabled,
-              isStartConfigDone: widget.pageData.isStartConfigDone,
               utilLocation: widget.pageData.utilLocation
             ),
             const SizedBox(height: 10),
@@ -131,6 +130,7 @@ class _HomePageState extends State<HomePage> {
 
 
     //wait the app to get location before it starts to save initial data on the mainTable
+    await widget.pageData.utilLocation.getInitialPosition(widget.pageData.isLocationEnabled);
     widget.pageData.recordData.startLatitude = widget.pageData.utilLocation.getPosition()?.latitude;
     widget.pageData.recordData.startLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
     widget.pageData.recordData.startAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
