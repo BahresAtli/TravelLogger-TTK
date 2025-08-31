@@ -28,13 +28,7 @@ class LocationText extends StatelessWidget{
     }
 
     if (isButtonPressed) {
-      if (isStartConfigDone) {
-        textField = utilLocation.convertPositionToString(AppLocalizations.of(context), isLocationEnabled);
-      } else if (isLocationEnabled) {
-        textField = AppLocalizations.of(context)!.waitAvailableLocation;
-      } else {
-        textField = AppLocalizations.of(context)!.locationDisabled;
-      }
+      textField = utilLocation.convertPositionToString(AppLocalizations.of(context), isLocationEnabled);
     }
 
     return Container(
