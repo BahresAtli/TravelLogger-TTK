@@ -43,6 +43,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    widget.pageData.utilLocation.startListeningLocation(widget.pageData.isLocationEnabled);
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -106,7 +107,6 @@ class _HomePageState extends State<HomePage> {
 
     widget.pageData.utilTime.start();
     widget.pageData.recordData.startTime = DateTime.now();
-    widget.pageData.utilLocation.startListeningLocation(widget.pageData.isLocationEnabled);
     WakelockPlus.enable();
 
     //reset the data
@@ -130,7 +130,7 @@ class _HomePageState extends State<HomePage> {
 
 
     //wait the app to get location before it starts to save initial data on the mainTable
-    await widget.pageData.utilLocation.getInitialPosition(widget.pageData.isLocationEnabled);
+
     widget.pageData.recordData.startLatitude = widget.pageData.utilLocation.getPosition()?.latitude;
     widget.pageData.recordData.startLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
     widget.pageData.recordData.startAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
@@ -187,7 +187,6 @@ class _HomePageState extends State<HomePage> {
     widget.pageData.recordData.endLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
     widget.pageData.recordData.endAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
     widget.pageData.recordData.label = widget.pageData.textEditingController.text;
-    widget.pageData.utilLocation.stopListeningLocation();
 
     recordData = widget.pageData.recordData;
     recordData.recordID = widget.pageData.recordData.recordID;
