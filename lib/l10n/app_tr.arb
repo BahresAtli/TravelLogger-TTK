@@ -63,5 +63,8 @@
   "@errorMeasure": {},
 
   "appInitializing": "Uygulama başlatılmaya hazırlanıyor. Lütfen bekleyin.",
-  "@appInitializing": {}
+  "@appInitializing": {},
+
+  "exportAsTsv": "TSV olarak dışa aktar",
+  "@exportAsTsv": {}
 }

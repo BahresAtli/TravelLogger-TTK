@@ -2,6 +2,8 @@ class TimeUtility {
   
   final Stopwatch _stopwatch = Stopwatch();
 
+  TimeUtility();
+
   void start() {
     _stopwatch.start();
   }

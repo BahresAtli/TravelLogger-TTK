@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ttkapp/core/constants.dart' as constants;
 import 'package:ttkapp/core/database/db_helper.dart';
 import 'package:ttkapp/core/dataclass/base/result_base.dart';
@@ -260,4 +262,64 @@ class RecordUtility {
     return Result.success(count);
   }
 
+  Future<Result<List<Map<String, dynamic>>>> selectRecordAsMap() async {
+    final db = await _dbHelper.database;
+    List<Map<String, dynamic>> queryResult;
+
+    List<String> columns = [
+      "recordID",
+      "startTime",
+      "endTime",
+      "elapsedMilisecs",
+      "distance",
+      "startLatitude",
+      "startLongitude",
+      "startAltitude",
+      "endLatitude",
+      "endLongitude",
+      "endAltitude",
+      "label"
+    ];
+
+    try {
+      queryResult = await db.query(
+        constants.mainTable,
+        columns: columns,
+      );
+    }
+    on Exception catch (e) {
+      return Result.failure(e.toString());
+    }
+
+    return Result.success(queryResult);
+  }
+
+
+  Future<Result<int>> exportRecordToTSV() async {
+    final directory = Directory('/storage/emulated/0/Download');
+
+    final dateTime = DateTime.now();
+    String fileName = "TTK_Record_${dateTime.year}-${dateTime.month.toString().padLeft(2,'0')}-${dateTime.day.toString().padLeft(2,'0')}_${dateTime.hour.toString().padLeft(2,'0')}-${dateTime.minute.toString().padLeft(2,'0')}-${dateTime.second.toString().padLeft(2,'0')}.tsv";
+    final file = File('${directory.path}/$fileName');
+
+    Result<List<Map<String, dynamic>>> recordResultList = await selectRecordAsMap();
+
+    if (!recordResultList.isSuccess) {
+      return Result.failure(recordResultList.error);
+    }
+
+    String tsv = "recordID\tstartTime\tendTime\telapsedMilisecs\tdistance\tstartLatitude\tstartLongitude\tstartAltitude\tendLatitude\tendLongitude\tendAltitude\tlabel\n";
+    
+    for (var record in recordResultList.data!) {
+      tsv += "${record["recordID"]}\t${record["startTime"]}\t${record["endTime"]}\t${record["elapsedMilisecs"]}\t${record["distance"]}\t${record["startLatitude"]}\t${record["startLongitude"]}\t${record["startAltitude"]}\t${record["endLatitude"]}\t${record["endLongitude"]}\t${record["endAltitude"]}\t${record["label"]}\n";
+    }
+
+    try {
+      await file.writeAsString(tsv);
+    } on Exception catch (e) {
+      return Result.failure(e.toString());
+    }
+
+    return Result.success(recordResultList.data!.length);
+  }
 }

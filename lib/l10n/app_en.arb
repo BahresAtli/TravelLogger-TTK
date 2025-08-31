@@ -64,5 +64,8 @@
   "@errorMeasure": {},
 
   "appInitializing": "App is initializing. Please wait.",
-  "@appInitializing": {}
+  "@appInitializing": {},
+
+  "exportAsTsv": "Export as TSV",
+  "@exportAsTsv": {}
 }

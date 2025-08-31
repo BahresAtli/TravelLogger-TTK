@@ -84,8 +84,17 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _exportInformation(context);
+        },
+        backgroundColor: Colors.pink,
+        child: CommonText(text: AppLocalizations.of(context)!.defaultText, fontSize: 15),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
+
 
   void startButtonPressed() {
     setState((){});
@@ -234,6 +243,53 @@ class _HomePageState extends State<HomePage> {
           )
         ]
       ),
+    );
+  }
+
+  Future<dynamic> _exportInformation(BuildContext context) {
+    return showDialog(
+      context: context, 
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color.fromARGB(255, 67, 66, 66),
+        title: CommonText(text: AppLocalizations.of(context)!.attention, fontSize: 20),
+        content: Text(
+          AppLocalizations.of(context)!.defaultText,
+        ),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            child: Text(
+              AppLocalizations.of(context)!.exportAsTsv,
+              style: const TextStyle(
+                color: Colors.red,
+              ),
+            ),
+            onPressed: () {
+              widget.pageData.utilRecord.exportRecordToTSV().then((exportResult) {
+                if (!exportResult.isSuccess) {
+                  //show error
+                  print("Error while exporting record: ${exportResult.error}");
+                }
+                print("Exported ${exportResult.data} records.");
+              });
+            },
+          ),
+          TextButton(
+            child: Text(
+              AppLocalizations.of(context)!.ok,
+              style: const TextStyle(
+                color: Colors.red,
+              ),
+            ),
+            onPressed: () {
+
+            },
+          )
+        ]
+      )
     );
   }
 

@@ -12,6 +12,8 @@ class LocationUtility {
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
 
+  LocationUtility();
+
   Future<Result<List<LocationData>>> selectLocation() async {
     final db = await _dbHelper.database;
     List<Map<String, dynamic>> queryResult;
