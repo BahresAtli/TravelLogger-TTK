@@ -122,7 +122,7 @@ class _MainAppState extends State<MainApp> {
     setState(() {
       pageData.isPageStable = true;      
     });
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.bottom]);
 
     return;
   }

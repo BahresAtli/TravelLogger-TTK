@@ -3,7 +3,6 @@ import 'main_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  //FlutterForegroundTask.initCommunicationPort();
-  runApp(const MaterialApp(home: MainApp())); //for making AlertDialog work
+  runApp(const MaterialApp(home: MainApp()));
 }
 
