@@ -156,14 +156,15 @@ class _HomePageState extends State<HomePage> {
         widget.pageData.locationData.speed = widget.pageData.utilLocation.getPosition()?.speed;
         widget.pageData.locationData.elapsedDistance = widget.pageData.recordData.distance;
         widget.pageData.locationData.timeAtInstance = DateTime.now();
+        if (widget.pageData.locationData.latitude != null && widget.pageData.locationData.longitude != null) {
+          Result<int> insertLocationResult = await widget.pageData.utilLocation.insertLocation(widget.pageData.locationData);
+          if (!insertLocationResult.isSuccess) {
+            //show error
+            print("Error while inserting location: ${insertLocationResult.error}");
+          }
 
-        Result<int> insertLocationResult = await widget.pageData.utilLocation.insertLocation(widget.pageData.locationData);
-        if (!insertLocationResult.isSuccess) {
-          //show error
-          print("Error while inserting location: ${insertLocationResult.error}");
+          widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
         }
-
-        widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
       });
     }
 
