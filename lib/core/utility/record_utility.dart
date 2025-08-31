@@ -294,9 +294,9 @@ class RecordUtility {
     return Result.success(queryResult);
   }
 
-
+  //coming in the next update
   Future<Result<int>> exportRecordToTSV() async {
-    final directory = Directory('/storage/emulated/0/Download');
+    final directory = Directory(constants.exportLocation);
 
     final dateTime = DateTime.now();
     String fileName = "TTK_Record_${dateTime.year}-${dateTime.month.toString().padLeft(2,'0')}-${dateTime.day.toString().padLeft(2,'0')}_${dateTime.hour.toString().padLeft(2,'0')}-${dateTime.minute.toString().padLeft(2,'0')}-${dateTime.second.toString().padLeft(2,'0')}.tsv";

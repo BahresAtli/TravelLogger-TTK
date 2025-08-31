@@ -16,6 +16,12 @@
   "ok": "Tamam",
   "@ok": {},
 
+  "cancel": "İptal",
+  "@cancel": {},
+
+  "close": "Kapat",
+  "@close": {},
+
   "attention": "Dikkat",
   "@attention": {},
 
@@ -65,6 +71,15 @@
   "appInitializing": "Uygulama başlatılmaya hazırlanıyor. Lütfen bekleyin.",
   "@appInitializing": {},
 
-  "exportAsTsv": "TSV olarak dışa aktar",
-  "@exportAsTsv": {}
+  "export": "Dışa aktar",
+  "@export": {},
+
+  "exportData": "Veriyi Dışa Aktar",
+  "@exportData": {},
+
+  "exportDescription": "Veri tabanını .db dosyası olarak dışa aktarabilirsiniz. Dışa aktarılan dosya cihazdaki Download klasöründe bulunacaktır.",
+  "@exportDescription": {},
+
+  "exportDatabase": "Veri tabanını dışa aktar",
+  "@exportDatabase": {}
 }

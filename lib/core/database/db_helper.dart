@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:ttkapp/core/dataclass/base/result_base.dart';
 import '../constants.dart' as constants;
 
 class DatabaseHelper {
@@ -152,6 +155,26 @@ class DatabaseHelper {
 
     return;
   }
+
+  Future<Result<int>> exportTheDb() async {
+    String databasesPath = await getDatabasesPath();
+    final File dbFile = File("$databasesPath/TTK.db");
+    final dateTime = DateTime.now();
+    String exportFileName = "TTK_${dateTime.year}-${dateTime.month.toString().padLeft(2,'0')}-${dateTime.day.toString().padLeft(2,'0')}_${dateTime.hour.toString().padLeft(2,'0')}-${dateTime.minute.toString().padLeft(2,'0')}-${dateTime.second.toString().padLeft(2,'0')}.db";
+
+    final exportFile = File("${constants.exportLocation}/$exportFileName");
+
+    try{
+      await dbFile.copy(exportFile.path);
+    } on Exception catch (e) {
+      return Result.failure("Error while exporting the database: $e");
+    }
+
+
+    return Result.success();
+
+  }
+
 }
 
 

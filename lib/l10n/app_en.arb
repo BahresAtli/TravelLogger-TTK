@@ -17,6 +17,12 @@
   "ok": "OK",
   "@ok": {},
 
+  "cancel": "Cancel",
+  "@cancel": {},
+
+  "close": "Close",
+  "@close": {},
+
   "attention": "Attention",
   "@attention": {},
 
@@ -66,6 +72,15 @@
   "appInitializing": "App is initializing. Please wait.",
   "@appInitializing": {},
 
-  "exportAsTsv": "Export as TSV",
-  "@exportAsTsv": {}
+  "export": "Export",
+  "@export": {},
+
+  "exportData": "Export Data",
+  "@exportData": {},
+
+  "exportDescription": "You can export the database as a .db file. The exported file will be located in the Download folder.",
+  "@exportDescription": {},
+
+  "exportDatabase": "Export the database",
+  "@exportDatabase": {}
 }

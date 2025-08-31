@@ -84,12 +84,16 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: TextButton(
         onPressed: () {
           _exportInformation(context);
         },
-        backgroundColor: Colors.pink,
-        child: CommonText(text: AppLocalizations.of(context)!.defaultText, fontSize: 15),
+        style: TextButton.styleFrom(
+          backgroundColor: Colors.pink,
+          minimumSize: const Size(150, 50),
+        ),
+        child: CommonText(text: AppLocalizations.of(context)!.export, fontSize: 15),
+        
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -251,9 +255,9 @@ class _HomePageState extends State<HomePage> {
       context: context, 
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color.fromARGB(255, 67, 66, 66),
-        title: CommonText(text: AppLocalizations.of(context)!.attention, fontSize: 20),
+        title: CommonText(text: AppLocalizations.of(context)!.exportData, fontSize: 20),
         content: Text(
-          AppLocalizations.of(context)!.defaultText,
+          AppLocalizations.of(context)!.exportDescription,
         ),
         contentTextStyle: const TextStyle(
           color: Colors.white,
@@ -262,30 +266,29 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             child: Text(
-              AppLocalizations.of(context)!.exportAsTsv,
+              AppLocalizations.of(context)!.exportDatabase,
               style: const TextStyle(
                 color: Colors.red,
               ),
             ),
-            onPressed: () {
-              widget.pageData.utilRecord.exportRecordToTSV().then((exportResult) {
-                if (!exportResult.isSuccess) {
-                  //show error
-                  print("Error while exporting record: ${exportResult.error}");
-                }
-                print("Exported ${exportResult.data} records.");
-              });
+            onPressed: () async {
+              Result<int> exportResult = await widget.pageData.dbHelper.exportTheDb();
+              if (!exportResult.isSuccess) {
+                //show error
+                print("Error while exporting the database: ${exportResult.error}");
+              }
+              print("Database exported successfully.");
             },
           ),
           TextButton(
             child: Text(
-              AppLocalizations.of(context)!.ok,
+              AppLocalizations.of(context)!.close,
               style: const TextStyle(
                 color: Colors.red,
               ),
             ),
             onPressed: () {
-
+              Navigator.pop(dialogContext);
             },
           )
         ]
