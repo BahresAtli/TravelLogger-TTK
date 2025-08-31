@@ -26,16 +26,12 @@ class LocationText extends StatelessWidget{
     }
 
     if (isButtonPressed) {
-      double? kmh = utilLocation.currentPosition?.speed;
-      if (kmh != null) {
-        textField = utilLocation.convertPositionToString(AppLocalizations.of(context));
-      } else if (isLocationEnabled) {
-        textField = AppLocalizations.of(context)!.waitAvailableLocation;
-      } else {
-        textField = AppLocalizations.of(context)!.locationDisabled;
-      }
+      textField = utilLocation.convertPositionToString(AppLocalizations.of(context), isLocationEnabled);
     }
 
-    return CommonText(text: textField, fontSize: 20);
+    return Container(
+      margin: const EdgeInsets.only(left: 20, right: 20),
+      child: CommonText(text: textField, fontSize: 17),
+      );
   }
 }

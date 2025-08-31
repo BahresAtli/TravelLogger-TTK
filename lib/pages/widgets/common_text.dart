@@ -18,6 +18,7 @@ class CommonText extends StatelessWidget {
         color: Colors.white,
         fontSize: fontSize,
       ),
+      textAlign: TextAlign.center,
     );
   }
 }

@@ -20,7 +20,8 @@ class PageData {
   bool isPageStable;
   bool isButtonPressed;
   bool isLocationEnabled;
-  Timer? initialSetState;
+  bool isStartConfigDone;
+  Timer? timerSetState;
   Timer? timerState;
   Timer? timerDatabase;
   TextEditingController textEditingController;
@@ -36,5 +37,6 @@ class PageData {
     isPageStable = true,
     isButtonPressed = false,
     isLocationEnabled = true,
+    isStartConfigDone = false,
     textEditingController = TextEditingController();
 }

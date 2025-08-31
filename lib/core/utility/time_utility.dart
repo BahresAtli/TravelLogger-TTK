@@ -1,20 +1,21 @@
 class TimeUtility {
-  Stopwatch stopwatch = Stopwatch();
-  int lastTime = 0;
+  
+  final Stopwatch _stopwatch = Stopwatch();
 
   void start() {
-    stopwatch.start();
+    _stopwatch.start();
   }
 
-  void stop() {
-    stopwatch.stop();
-    lastTime = stopwatch.elapsedMilliseconds;
-    stopwatch.reset();
+  int stop() {
+    _stopwatch.stop();
+    int lastTime = _stopwatch.elapsedMilliseconds;
+    _stopwatch.reset();
+    return lastTime;
   }
 
   Duration _getElapsedAsDuration(int? milliSeconds) {
     if (milliSeconds != null) return Duration(milliseconds: milliSeconds);
-    return Duration(milliseconds: stopwatch.elapsedMilliseconds);
+    return Duration(milliseconds: _stopwatch.elapsedMilliseconds);
   }
 
   String formatElapsedToText(int? milliseconds) {
