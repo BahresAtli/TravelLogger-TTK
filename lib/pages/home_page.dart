@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
     Result<int> insertRecordResult = await widget.pageData.utilRecord.insertRecord(widget.pageData.recordData);
     if (!insertRecordResult.isSuccess) {
       //show error
-      print("Error while inserting record: ${insertRecordResult.error}");
+      widget.pageData.logger.severe("Error while inserting record: ${insertRecordResult.error}");
     }
 
     widget.pageData.recordData.recordID = insertRecordResult.data!;
@@ -173,7 +173,7 @@ class _HomePageState extends State<HomePage> {
           Result<int> insertLocationResult = await widget.pageData.utilLocation.insertLocation(widget.pageData.locationData);
           if (!insertLocationResult.isSuccess) {
             //show error
-            print("Error while inserting location: ${insertLocationResult.error}");
+            widget.pageData.logger.severe("Error while inserting location: ${insertLocationResult.error}");
           }
 
           widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
@@ -214,7 +214,7 @@ class _HomePageState extends State<HomePage> {
     
     if (!updateRecordResult.isSuccess) {
       //show error
-      print("Error while updating record: ${updateRecordResult.error}");
+      widget.pageData.logger.severe("Error while updating record: ${updateRecordResult.error}");
     }
     widget.pageData.isStartConfigDone = false;
     widget.pageData.recordData.distance = 0.0;
@@ -275,9 +275,9 @@ class _HomePageState extends State<HomePage> {
               Result<int> exportResult = await widget.pageData.dbHelper.exportTheDb();
               if (!exportResult.isSuccess) {
                 //show error
-                print("Error while exporting the database: ${exportResult.error}");
+                widget.pageData.logger.warning("Error while exporting the database: ${exportResult.error}");
               }
-              print("Database exported successfully.");
+              widget.pageData.logger.info("Database exported successfully.");
             },
           ),
           TextButton(

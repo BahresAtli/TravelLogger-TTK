@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:logging/logging.dart';
 import 'package:ttkapp/core/dataclass/location_data.dart';
 import 'package:ttkapp/core/dataclass/record_data.dart';
 import 'package:ttkapp/core/database/db_helper.dart';
@@ -26,6 +27,7 @@ class PageData {
   Timer? timerDatabase;
   TextEditingController textEditingController;
   AppLocalizations? message;
+  Logger logger;
 
   PageData() : 
     dbHelper = DatabaseHelper.instance,
@@ -38,5 +40,6 @@ class PageData {
     isButtonPressed = false,
     isLocationEnabled = true,
     isStartConfigDone = false,
-    textEditingController = TextEditingController();
+    textEditingController = TextEditingController(),
+    logger = Logger('HomePage');
 }
