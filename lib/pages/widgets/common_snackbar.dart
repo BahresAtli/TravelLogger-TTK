@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ttkapp/pages/widgets/common_text.dart';
+import 'package:ttkapp/pages/widgets/common/common_text.dart';
 
 class CommonSnackbar {
 
