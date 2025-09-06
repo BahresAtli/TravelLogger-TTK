@@ -3,7 +3,7 @@ import 'package:ttkapp/core/dataclass/record_data.dart';
 import 'package:ttkapp/core/utility/location_utility.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ttkapp/core/constants.dart' as constants;
-import 'package:ttkapp/pages/widgets/common_text.dart';
+import 'package:ttkapp/pages/widgets/common/common_text.dart';
 
 class DistanceSpeedText extends StatelessWidget {
   final bool isPageStable;
