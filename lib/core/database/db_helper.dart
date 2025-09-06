@@ -39,7 +39,10 @@ class DatabaseHelper {
 
   Future<void> initializeNewColumns(String version) async {
     //new column handling will be automated in the future.
-    switch(version){
+    switch(version) {
+      case '0.0.2':
+        await initializeNewColumns('0.0.1');
+        break;
       case '0.0.1':
         await refreshTable(constants.mainTable);
         await refreshTable(constants.locationTable);
