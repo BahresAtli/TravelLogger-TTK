@@ -82,5 +82,30 @@
   "@exportDescription": {},
 
   "exportDatabase": "Export the database",
-  "@exportDatabase": {}
+  "@exportDatabase": {},
+
+  "copiedClipboard": "Copied to clipboard.",
+  "@copiedClipboard": {},
+
+  "pastedClipboard": "Pasted from clipboard.",
+  "@pastedClipboard": {},
+
+  "cleared": "Cleared.",
+  "@cleared": {},
+
+  "measurementStarted": "Measurement started.",
+  "@measurementStarted": {},
+
+  "measurementFinished": "Measurement finished.",
+  "@measurementFinished": {},
+
+  "exportSuccess": "Database exported successfully.",
+  "@exportSuccess": {},
+
+  "exportFail": "Failed to export the database: {error}",
+  "@exportFail": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }

@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ttkapp/core/dataclass/base/result_base.dart';
 import 'package:ttkapp/core/dataclass/record_data.dart';
-import 'package:ttkapp/pages/widgets/common_text.dart';
+import 'package:ttkapp/pages/widgets/common/common_snackbar.dart';
+import 'package:ttkapp/pages/widgets/common/common_text.dart';
 import 'package:ttkapp/pages/widgets/homepage/distance_speed_text.dart';
 import 'package:ttkapp/pages/widgets/homepage/label_text_box.dart';
 import 'package:ttkapp/pages/widgets/homepage/location_text.dart';
@@ -79,7 +81,8 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 10),
             LabelTextBox(
               isButtonPressed: widget.pageData.isButtonPressed,
-              textEditingController: widget.pageData.textEditingController
+              textEditingController: widget.pageData.textEditingController,
+              buttonsPressed: _labelButtons
             )
           ],
         ),
@@ -105,8 +108,16 @@ class _HomePageState extends State<HomePage> {
     if(widget.pageData.isPageStable) {
       if (widget.pageData.isButtonPressed == false) {
         _pressHandler(context);
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          CommonSnackbar.create(AppLocalizations.of(context)!.measurementStarted),
+        );
       } else {
         _finishHandler();
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          CommonSnackbar.create(AppLocalizations.of(context)!.measurementFinished),
+        );
       }
       widget.pageData.isButtonPressed = !widget.pageData.isButtonPressed;
     }
@@ -272,11 +283,20 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             onPressed: () async {
+              var message = AppLocalizations.of(context)!;
+              Navigator.pop(dialogContext);
+              var messenger = ScaffoldMessenger.of(context);
               Result<int> exportResult = await widget.pageData.dbHelper.exportTheDb();
               if (!exportResult.isSuccess) {
-                //show error
-                widget.pageData.logger.warning("Error while exporting the database: ${exportResult.error}");
+                messenger.removeCurrentSnackBar();
+                messenger.showSnackBar(
+                  CommonSnackbar.create(message.exportFail(exportResult.error.toString()))
+                );
               }
+              messenger.removeCurrentSnackBar();
+              messenger.showSnackBar(
+                CommonSnackbar.create(message.exportSuccess)
+              );
               widget.pageData.logger.info("Database exported successfully.");
             },
           ),
@@ -294,6 +314,25 @@ class _HomePageState extends State<HomePage> {
         ]
       )
     );
+  }
+
+  void _labelButtons(int buttonNo) async{
+    switch (buttonNo) {
+      case 1:
+        await Clipboard.setData(ClipboardData(text: widget.pageData.textEditingController.text));
+        break;
+      case 2:
+        ClipboardData? value = await Clipboard.getData(Clipboard.kTextPlain);
+        if (value != null) {
+          widget.pageData.textEditingController.text = value.text!;
+        }
+        break;
+      case 3:
+        widget.pageData.textEditingController.clear();
+        break;
+      default:
+        break;
+    }
   }
 
   /*

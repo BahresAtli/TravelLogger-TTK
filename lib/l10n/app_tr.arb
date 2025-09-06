@@ -7,7 +7,7 @@
   "start": "Başlat",
   "@start": {},
 
-  "finish": "Durdur",
+  "finish": "Bitir",
   "@finish": {},
 
   "pleaseWait": "Lütfen Bekleyin",
@@ -81,5 +81,30 @@
   "@exportDescription": {},
 
   "exportDatabase": "Veri tabanını dışa aktar",
-  "@exportDatabase": {}
+  "@exportDatabase": {},
+
+  "copiedClipboard": "Panoya kopyalandı.",
+  "@copiedClipboard": {},
+
+  "pastedClipboard": "Panodan yapıştırıldı.",
+  "@pastedClipboard": {},
+
+  "cleared": "Temizlendi.",
+  "@cleared": {},
+
+  "measurementStarted": "Ölçüm başlatıldı.",
+  "@measurementStarted": {},
+
+  "measurementFinished": "Ölçüm tamamlandı.",
+  "@measurementFinished": {},
+
+  "exportSuccess": "Veri tabanını dışa aktarma başarılı.",
+  "@exportSuccess": {},
+
+  "exportFail": "Veri tabanını dışa aktarma başarısız: {error}",
+  "@exportFail": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }
