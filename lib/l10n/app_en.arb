@@ -17,6 +17,12 @@
   "ok": "OK",
   "@ok": {},
 
+  "cancel": "Cancel",
+  "@cancel": {},
+
+  "close": "Close",
+  "@close": {},
+
   "attention": "Attention",
   "@attention": {},
 
@@ -64,5 +70,42 @@
   "@errorMeasure": {},
 
   "appInitializing": "App is initializing. Please wait.",
-  "@appInitializing": {}
+  "@appInitializing": {},
+
+  "export": "Export",
+  "@export": {},
+
+  "exportData": "Export Data",
+  "@exportData": {},
+
+  "exportDescription": "You can export the database as a .db file. The exported file will be located in the Download folder.",
+  "@exportDescription": {},
+
+  "exportDatabase": "Export the database",
+  "@exportDatabase": {},
+
+  "copiedClipboard": "Copied to clipboard.",
+  "@copiedClipboard": {},
+
+  "pastedClipboard": "Pasted from clipboard.",
+  "@pastedClipboard": {},
+
+  "cleared": "Cleared.",
+  "@cleared": {},
+
+  "measurementStarted": "Measurement started.",
+  "@measurementStarted": {},
+
+  "measurementFinished": "Measurement finished.",
+  "@measurementFinished": {},
+
+  "exportSuccess": "Database exported successfully.",
+  "@exportSuccess": {},
+
+  "exportFail": "Failed to export the database: {error}",
+  "@exportFail": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:ttkapp/core/utility/time_utility.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:ttkapp/pages/widgets/common_text.dart';
+import 'package:ttkapp/pages/widgets/common/common_text.dart';
 
 class TimeText extends StatelessWidget {
   final bool isPressed;

@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ttkapp/core/dataclass/base/result_base.dart';
 import 'package:ttkapp/core/dataclass/record_data.dart';
-import 'package:ttkapp/pages/widgets/common_text.dart';
+import 'package:ttkapp/pages/widgets/common/common_snackbar.dart';
+import 'package:ttkapp/pages/widgets/common/common_text.dart';
 import 'package:ttkapp/pages/widgets/homepage/distance_speed_text.dart';
 import 'package:ttkapp/pages/widgets/homepage/label_text_box.dart';
 import 'package:ttkapp/pages/widgets/homepage/location_text.dart';
@@ -43,6 +45,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    widget.pageData.utilLocation.startListeningLocation(widget.pageData.isLocationEnabled);
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -78,21 +81,43 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 10),
             LabelTextBox(
               isButtonPressed: widget.pageData.isButtonPressed,
-              textEditingController: widget.pageData.textEditingController
+              textEditingController: widget.pageData.textEditingController,
+              buttonsPressed: _labelButtons
             )
           ],
         ),
       ),
+      floatingActionButton: TextButton(
+        onPressed: () {
+          _exportInformation(context);
+        },
+        style: TextButton.styleFrom(
+          backgroundColor: Colors.pink,
+          minimumSize: const Size(150, 50),
+        ),
+        child: CommonText(text: AppLocalizations.of(context)!.export, fontSize: 15),
+        
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
+
 
   void startButtonPressed() {
     setState((){});
     if(widget.pageData.isPageStable) {
       if (widget.pageData.isButtonPressed == false) {
         _pressHandler(context);
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          CommonSnackbar.create(AppLocalizations.of(context)!.measurementStarted),
+        );
       } else {
         _finishHandler();
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          CommonSnackbar.create(AppLocalizations.of(context)!.measurementFinished),
+        );
       }
       widget.pageData.isButtonPressed = !widget.pageData.isButtonPressed;
     }
@@ -106,7 +131,6 @@ class _HomePageState extends State<HomePage> {
 
     widget.pageData.utilTime.start();
     widget.pageData.recordData.startTime = DateTime.now();
-    widget.pageData.utilLocation.startListeningLocation(widget.pageData.isLocationEnabled);
     WakelockPlus.enable();
 
     //reset the data
@@ -130,7 +154,7 @@ class _HomePageState extends State<HomePage> {
 
 
     //wait the app to get location before it starts to save initial data on the mainTable
-    await widget.pageData.utilLocation.getInitialPosition(widget.pageData.isLocationEnabled);
+
     widget.pageData.recordData.startLatitude = widget.pageData.utilLocation.getPosition()?.latitude;
     widget.pageData.recordData.startLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
     widget.pageData.recordData.startAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
@@ -139,7 +163,7 @@ class _HomePageState extends State<HomePage> {
     Result<int> insertRecordResult = await widget.pageData.utilRecord.insertRecord(widget.pageData.recordData);
     if (!insertRecordResult.isSuccess) {
       //show error
-      print("Error while inserting record: ${insertRecordResult.error}");
+      widget.pageData.logger.severe("Error while inserting record: ${insertRecordResult.error}");
     }
 
     widget.pageData.recordData.recordID = insertRecordResult.data!;
@@ -156,14 +180,15 @@ class _HomePageState extends State<HomePage> {
         widget.pageData.locationData.speed = widget.pageData.utilLocation.getPosition()?.speed;
         widget.pageData.locationData.elapsedDistance = widget.pageData.recordData.distance;
         widget.pageData.locationData.timeAtInstance = DateTime.now();
+        if (widget.pageData.locationData.latitude != null && widget.pageData.locationData.longitude != null) {
+          Result<int> insertLocationResult = await widget.pageData.utilLocation.insertLocation(widget.pageData.locationData);
+          if (!insertLocationResult.isSuccess) {
+            //show error
+            widget.pageData.logger.severe("Error while inserting location: ${insertLocationResult.error}");
+          }
 
-        Result<int> insertLocationResult = await widget.pageData.utilLocation.insertLocation(widget.pageData.locationData);
-        if (!insertLocationResult.isSuccess) {
-          //show error
-          print("Error while inserting location: ${insertLocationResult.error}");
+          widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
         }
-
-        widget.pageData.locationData.locationRecordID = insertLocationResult.data!;
       });
     }
 
@@ -187,7 +212,6 @@ class _HomePageState extends State<HomePage> {
     widget.pageData.recordData.endLongitude = widget.pageData.utilLocation.getPosition()?.longitude;
     widget.pageData.recordData.endAltitude = widget.pageData.utilLocation.getPosition()?.altitude;
     widget.pageData.recordData.label = widget.pageData.textEditingController.text;
-    widget.pageData.utilLocation.stopListeningLocation();
 
     recordData = widget.pageData.recordData;
     recordData.recordID = widget.pageData.recordData.recordID;
@@ -201,7 +225,7 @@ class _HomePageState extends State<HomePage> {
     
     if (!updateRecordResult.isSuccess) {
       //show error
-      print("Error while updating record: ${updateRecordResult.error}");
+      widget.pageData.logger.severe("Error while updating record: ${updateRecordResult.error}");
     }
     widget.pageData.isStartConfigDone = false;
     widget.pageData.recordData.distance = 0.0;
@@ -235,6 +259,80 @@ class _HomePageState extends State<HomePage> {
         ]
       ),
     );
+  }
+
+  Future<dynamic> _exportInformation(BuildContext context) {
+    return showDialog(
+      context: context, 
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color.fromARGB(255, 67, 66, 66),
+        title: CommonText(text: AppLocalizations.of(context)!.exportData, fontSize: 20),
+        content: Text(
+          AppLocalizations.of(context)!.exportDescription,
+        ),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            child: Text(
+              AppLocalizations.of(context)!.exportDatabase,
+              style: const TextStyle(
+                color: Colors.red,
+              ),
+            ),
+            onPressed: () async {
+              var message = AppLocalizations.of(context)!;
+              Navigator.pop(dialogContext);
+              var messenger = ScaffoldMessenger.of(context);
+              Result<int> exportResult = await widget.pageData.dbHelper.exportTheDb();
+              if (!exportResult.isSuccess) {
+                messenger.removeCurrentSnackBar();
+                messenger.showSnackBar(
+                  CommonSnackbar.create(message.exportFail(exportResult.error.toString()))
+                );
+              }
+              messenger.removeCurrentSnackBar();
+              messenger.showSnackBar(
+                CommonSnackbar.create(message.exportSuccess)
+              );
+              widget.pageData.logger.info("Database exported successfully.");
+            },
+          ),
+          TextButton(
+            child: Text(
+              AppLocalizations.of(context)!.close,
+              style: const TextStyle(
+                color: Colors.red,
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+          )
+        ]
+      )
+    );
+  }
+
+  void _labelButtons(int buttonNo) async{
+    switch (buttonNo) {
+      case 1:
+        await Clipboard.setData(ClipboardData(text: widget.pageData.textEditingController.text));
+        break;
+      case 2:
+        ClipboardData? value = await Clipboard.getData(Clipboard.kTextPlain);
+        if (value != null) {
+          widget.pageData.textEditingController.text = value.text!;
+        }
+        break;
+      case 3:
+        widget.pageData.textEditingController.clear();
+        break;
+      default:
+        break;
+    }
   }
 
   /*

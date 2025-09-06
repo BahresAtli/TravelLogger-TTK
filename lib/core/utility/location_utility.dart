@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ttkapp/core/constants.dart' as constants;
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -11,6 +13,8 @@ class LocationUtility {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
+
+  LocationUtility();
 
   Future<Result<List<LocationData>>> selectLocation() async {
     final db = await _dbHelper.database;
@@ -237,6 +241,35 @@ class LocationUtility {
     return Result.success(count);
   }
 
+  Future<Result<List<Map<String, dynamic>>>> selectLocationAsMap() async {
+    final db = await _dbHelper.database;
+    List<Map<String, dynamic>> queryResult;
+
+    List<String> columns = [
+      "locationRecordID",
+      "recordID",
+      "locationOrder",
+      "latitude",
+      "longitude",
+      "altitude",
+      "speed",
+      "elapsedDistance",
+      "timeAtInstance"
+    ];
+
+    try {
+      queryResult = await db.query(
+        constants.locationTable,
+        columns: columns,
+      );
+    }
+    on Exception catch (e) {
+      return Result.failure(e.toString());
+    }
+
+    return Result.success(queryResult);
+  }
+
   Future<Result<LocationPermission>> locationPermission() async {
 
     LocationPermission permission = LocationPermission.denied;
@@ -329,6 +362,36 @@ class LocationUtility {
     }
 
     return '${_currentPosition?.latitude.toStringAsFixed(7)}, ${_currentPosition?.longitude.toStringAsFixed(7)}, ${_currentPosition?.altitude.toStringAsFixed(2)}';
+  }
+
+
+  //coming in the next update
+  Future<Result<int>> exportLocationToTsv() async {
+    final directory = Directory(constants.exportLocation);
+
+    final dateTime = DateTime.now();
+    String fileName = "TTK_Location_${dateTime.year}-${dateTime.month.toString().padLeft(2,'0')}-${dateTime.day.toString().padLeft(2,'0')}_${dateTime.hour.toString().padLeft(2,'0')}-${dateTime.minute.toString().padLeft(2,'0')}-${dateTime.second.toString().padLeft(2,'0')}.tsv";
+    final file = File('${directory.path}/$fileName');
+
+    Result<List<Map<String, dynamic>>> locationResultList = await selectLocationAsMap();
+
+    if (!locationResultList.isSuccess) {
+      return Result.failure(locationResultList.error);
+    }
+
+    String tsv = "locationRecordID\trecordID\tlocationOrder\tlatitude\tlongitude\taltitude\tspeed\telapsedDistance\ttimeAtInstance\n";
+
+    for (var location in locationResultList.data!) {
+      tsv += "${location["locationRecordID"]}\t${location["recordID"]}\t${location["locationOrder"]}\t${location["latitude"]}\t${location["longitude"]}\t${location["altitude"]}\t${location["speed"]}\t${location["elapsedDistance"]}\t${location["timeAtInstance"]}\n";
+    }
+      
+    try {
+      await file.writeAsString(tsv);
+    } on Exception catch (e) {
+      return Result.failure(e.toString());
+    }
+
+    return Result.success(locationResultList.data!.length);
   }
 
 }
